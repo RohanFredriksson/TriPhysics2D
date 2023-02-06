@@ -30,6 +30,10 @@ class Triangle : public Shape {
         Triangle(vec2 a, vec2 b, vec2 c);
         
         void rotate(float degrees, vec2 origin) override;
+        
+        vec2 a();
+        vec2 b();
+        vec2 c();
 
 };
 

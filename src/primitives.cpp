@@ -77,6 +77,18 @@ void Triangle::rotate(float degrees, vec2 origin) {
     
 }
 
+vec2 Triangle::a() {
+    return this->position + this->p2a;
+}
+
+vec2 Triangle::b() {
+    return this->position + this->p2b;
+}
+
+vec2 Triangle::c() {
+    return this->position + this->p2c;
+}
+
 Circle::Circle(vec2 position, float radius, float rotation) {
 
     this->position = position;
