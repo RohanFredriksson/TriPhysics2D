@@ -8,4 +8,4 @@ struct IntersectionResult {
 };
 typedef struct IntersectionResult IntersectionResult;
 
-IntersectionResult isIntersecting(Line l1, Line l2);
+//IntersectionResult isIntersecting(Line l1, Line l2);

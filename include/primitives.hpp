@@ -4,28 +4,31 @@
 
 using glm::vec2;
 
-class Line {
+class Shape {
 
-    private:
-        vec2 from;
-        vec2 to;
-        float gradient;
+    public:
+        
+        float rotation;
+
+        Shape(float rotation);
+        virtual vec2 centroid();
+        virtual void rotate(float degrees, vec2 origin);
+        virtual void translate(vec2 by);
+
+};
+
+class Triangle : public Shape {
 
     public:
 
-        Line(vec2 from, vec2 to);
-
-        vec2 getFrom();
-        vec2 getTo();
-        vec2 getMin();
-        vec2 getMax();
-        float getGradient();
-        float getIntercept();
-        bool isVertical();
-        bool isHorizontal();
-
-        void setFrom(vec2 from);
-        void setTo(vec2 to);
-        void set(vec2 from, vec2 to);
+        vec2 a;
+        vec2 b;
+        vec2 c;
+    
+        Triangle(vec2 a, vec2 b, vec2 c, float rotation);
+        Triangle(vec2 a, vec2 b, vec2 c);
+        vec2 centroid() override;
+        void rotate(float degrees, vec2 origin) override;
+        void translate(vec2 by) override;
 
 };
