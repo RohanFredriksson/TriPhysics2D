@@ -9,11 +9,10 @@ class Shape {
     public:
         
         float rotation;
+        vec2 position;
 
-        Shape(float rotation);
-        virtual vec2 centroid();
         virtual void rotate(float degrees, vec2 origin);
-        virtual void translate(vec2 by);
+        void translate(vec2 by);
 
 };
 
@@ -21,14 +20,28 @@ class Triangle : public Shape {
 
     public:
 
-        vec2 a;
-        vec2 b;
-        vec2 c;
-    
+        vec2 p2a;
+        vec2 p2b;
+        vec2 p2c;
+
+        Triangle(vec2 position, vec2 p2a, vec2 p2b, vec2 p2c, float rotation);
+        Triangle(vec2 position, vec2 p2a, vec2 p2b, vec2 p2c);
         Triangle(vec2 a, vec2 b, vec2 c, float rotation);
         Triangle(vec2 a, vec2 b, vec2 c);
-        vec2 centroid() override;
+        
         void rotate(float degrees, vec2 origin) override;
-        void translate(vec2 by) override;
+
+};
+
+class Circle : public Shape {
+
+    public:
+
+        float radius;
+
+        Circle(vec2 position, float radius, float rotation);
+        Circle(vec2 position, float radius);
+
+        void rotate(float degrees, vec2 origin) override;
 
 };

@@ -12,62 +12,89 @@ void rotateVector(vec2& vec, float degrees, vec2 origin) {
 
 }
 
-Shape::Shape(float rotation) {
-    this->rotation = rotation;
+void Shape::translate(vec2 by) {
+    this->position += by;
 }
 
-Triangle::Triangle(vec2 a, vec2 b, vec2 c, float rotation) : Shape::Shape(rotation) {
-    this->a = a;
-    this->b = b;
-    this->c = c;
-}
-
-Triangle::Triangle(vec2 a, vec2 b, vec2 c) : Shape::Shape(0.0f) {
-    this->a = a;
-    this->b = b;
-    this->c = c;
-}
-
-vec2 Triangle::centroid() {
-    return vec2((this->a.x + this->b.x + this->c.x) / 3.0f, (this->a.y + this->b.y + this->c.y) / 3.0f);
-}
-
-void Triangle::rotate(float degrees, vec2 origin) {
-    rotateVector(this->a, degrees, origin);
-    rotateVector(this->b, degrees, origin);
-    rotateVector(this->b, degrees, origin);
+void Shape::rotate(float degrees, vec2 origin) {
+    rotateVector(this->position, degrees, origin);
     this->rotation += degrees;
 }
 
-void Triangle::translate(vec2 by) {
-    this->a += by;
-    this->b += by;
-    this->c += by;
+Triangle::Triangle(vec2 position, vec2 p2a, vec2 p2b, vec2 p2c, float rotation) {
+
+    this->position = position;
+    this->rotation = rotation;
+
+    this->p2a = p2a;
+    this->p2b = p2b;
+    this->p2c = p2c;
+
 }
 
-/*
-Line::Line(vec2 from, vec2 to) {
-    this->from = from;
-    this->to = to;
+Triangle::Triangle(vec2 position, vec2 p2a, vec2 p2b, vec2 p2c) {
+
+    this->position = position;
+    this->rotation = 0.0f;
+
+    this->p2a = p2a;
+    this->p2b = p2b;
+    this->p2c = p2c;
+
 }
 
-vec2 Line::getMin() {
-    return vec2(std::min(this->from.x, this->to.x), std::min(this->from.y, this->to.y));
+Triangle::Triangle(vec2 a, vec2 b, vec2 c, float rotation) {
+    
+    vec2 position = vec2((a.x + b.x + c.x) / 3.0f, (a.y + b.y + c.y) / 3.0f);
+    this->position = position;
+    this->rotation = rotation;
+    
+    this->p2a = a - position;
+    this->p2b = b - position;
+    this->p2c = c - position;
+
 }
 
-vec2 Line::getMax() {
-    return vec2(std::max(this->from.x, this->to.x), std::max(this->from.y, this->to.y));
+Triangle::Triangle(vec2 a, vec2 b, vec2 c) {
+
+    vec2 position = vec2((a.x + b.x + c.x) / 3.0f, (a.y + b.y + c.y) / 3.0f);
+    this->position = position;
+    this->rotation = 0.0f;
+    
+    this->p2a = a - position;
+    this->p2b = b - position;
+    this->p2c = c - position;
+
 }
 
-float Line::getGradient() {
-    return (this->to.y - this->from.y) / (this->to.x - this->from.x);
+void Triangle::rotate(float degrees, vec2 origin) {
+
+    rotateVector(this->p2a, degrees, this->position);
+    rotateVector(this->p2b, degrees, this->position);
+    rotateVector(this->p2c, degrees, this->position);
+
+    Shape::rotate(degrees, origin);
+    
 }
 
-float Line::getIntercept() {
-    return this->from.y - this->getGradient() * this->from.x;
+Circle::Circle(vec2 position, float radius, float rotation) {
+
+    this->position = position;
+    this->rotation = rotation;
+
+    this->radius = radius;
+
 }
 
-bool Line::isVertical() {
-    return this->from.x == this->to.x;
+Circle::Circle(vec2 position, float radius) {
+
+    this->position = position;
+    this->rotation = 0.0f;
+
+    this->radius = radius;
+
 }
-*/
+
+void Circle::rotate(float degrees, vec2 origin)  {
+    Shape::rotate(degrees, origin);
+}
