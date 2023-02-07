@@ -12,19 +12,36 @@ void rotateVector(vec2& vec, float degrees, vec2 origin) {
 
 }
 
-void Shape::translate(vec2 by) {
-    this->position += by;
+Body::Body() {
+
+    this->collider = nullptr;
+    this->force = vec2(0.0f, 0.0f);
+    this->velocity = vec2(0.0f, 0.0f);
+
+    this->position = vec2(0.0f, 0.0f);
+    this->rotation = 0.0f;
+
+    this->mass = 0.0f;
+    this->restitution = 1.0f;
+    this->friction = 1.0f;
+    this->sensor = false;
+
 }
 
-void Shape::rotate(float degrees, vec2 origin) {
-    rotateVector(this->position, degrees, origin);
+void Body::rotate(float degrees) {
+    if (this->collider != nullptr) {this->collider->rotate(degrees);}
     this->rotation += degrees;
 }
 
-Triangle::Triangle(vec2 position, vec2 p2a, vec2 p2b, vec2 p2c, float rotation) {
+void Body::translate(vec2 vector) {
+    this->position += vector;
+}
 
-    this->position = position;
-    this->rotation = rotation;
+void Shape::rotate(float degrees) {
+
+}
+
+Triangle::Triangle(vec2 p2a, vec2 p2b, vec2 p2c) {
 
     this->p2a = p2a;
     this->p2b = p2b;
@@ -32,61 +49,28 @@ Triangle::Triangle(vec2 position, vec2 p2a, vec2 p2b, vec2 p2c, float rotation) 
 
 }
 
-Triangle::Triangle(vec2 position, vec2 p2a, vec2 p2b, vec2 p2c) {
+void Triangle::rotate(float degrees) {
 
-    this->position = position;
-    this->rotation = 0.0f;
-
-    this->p2a = p2a;
-    this->p2b = p2b;
-    this->p2c = p2c;
-
-}
-
-Triangle::Triangle(vec2 a, vec2 b, vec2 c, float rotation) {
-    
-    vec2 position = vec2((a.x + b.x + c.x) / 3.0f, (a.y + b.y + c.y) / 3.0f);
-    this->position = position;
-    this->rotation = rotation;
-    
-    this->p2a = a - position;
-    this->p2b = b - position;
-    this->p2c = c - position;
-
-}
-
-Triangle::Triangle(vec2 a, vec2 b, vec2 c) {
-
-    vec2 position = vec2((a.x + b.x + c.x) / 3.0f, (a.y + b.y + c.y) / 3.0f);
-    this->position = position;
-    this->rotation = 0.0f;
-    
-    this->p2a = a - position;
-    this->p2b = b - position;
-    this->p2c = c - position;
-
-}
-
-void Triangle::rotate(float degrees, vec2 origin) {
-
-    rotateVector(this->p2a, degrees, this->position);
-    rotateVector(this->p2b, degrees, this->position);
-    rotateVector(this->p2c, degrees, this->position);
-
-    Shape::rotate(degrees, origin);
+    vec2 origin = vec2(0.0f, 0.0f);
+    rotateVector(this->p2a, degrees, origin);
+    rotateVector(this->p2b, degrees, origin);
+    rotateVector(this->p2c, degrees, origin);
     
 }
 
 vec2 Triangle::a() {
-    return this->position + this->p2a;
+    if (this->body == nullptr) {return this->p2a;}
+    return this->body->position + this->p2a;
 }
 
 vec2 Triangle::b() {
-    return this->position + this->p2b;
+    if (this->body == nullptr) {return this->p2b;}
+    return this->body->position + this->p2b;
 }
 
 vec2 Triangle::c() {
-    return this->position + this->p2c;
+    if (this->body == nullptr) {return this->p2c;}
+    return this->body->position + this->p2c;
 }
 
 vec2 Triangle::a2b() {
@@ -101,24 +85,10 @@ vec2 Triangle::b2c() {
     return this->p2c - this->p2b;
 }
 
-Circle::Circle(vec2 position, float radius, float rotation) {
-
-    this->position = position;
-    this->rotation = rotation;
-
+Circle::Circle(float radius) {
     this->radius = radius;
-
 }
 
-Circle::Circle(vec2 position, float radius) {
-
-    this->position = position;
-    this->rotation = 0.0f;
-
-    this->radius = radius;
-
-}
-
-void Circle::rotate(float degrees, vec2 origin)  {
-    Shape::rotate(degrees, origin);
+void Circle::rotate(float degrees)  {
+    
 }
