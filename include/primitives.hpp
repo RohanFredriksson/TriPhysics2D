@@ -35,6 +35,10 @@ class Triangle : public Shape {
         vec2 b();
         vec2 c();
 
+        vec2 a2b();
+        vec2 a2c();
+        vec2 b2c();
+
 };
 
 class Circle : public Shape {

@@ -89,6 +89,18 @@ vec2 Triangle::c() {
     return this->position + this->p2c;
 }
 
+vec2 Triangle::a2b() {
+    return this->p2b - this->p2a;
+}
+
+vec2 Triangle::a2c() {
+    return this->p2c - this->p2a;
+}
+
+vec2 Triangle::b2c() {
+    return this->p2c - this->p2b;
+}
+
 Circle::Circle(vec2 position, float radius, float rotation) {
 
     this->position = position;
