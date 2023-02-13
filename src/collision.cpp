@@ -10,7 +10,7 @@ CollisionResult getCollision(Circle a, Circle b) {
     // Determine if the two circles are colliding.
     float sumRadii = a.radius + b.radius;
     vec2 distance = b.centre - a.centre;
-    if (glm::dot(distance, distance) - (sumRadii * sumRadii) > 0) {return {false, vec2(0.0f, 0.0f), 0.0f};}
+    if (glm::dot(distance, distance) - (sumRadii * sumRadii) > 0) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
     // Find the depth and normal of the collision
     float depth = fabsf(glm::length(distance) - sumRadii) * 0.5f;
@@ -20,13 +20,14 @@ CollisionResult getCollision(Circle a, Circle b) {
     float distanceToPoint = a.radius - depth;
     vec2 contactPoint = distanceToPoint * normal + a.centre;
 
-    return {true, contactPoint, depth};
+    return {true, normal, contactPoint, depth};
 
 }
 
 CollisionResult getCollision(Circle c, Triangle t) {
 
     // Keep track of the translation that occurs.
+    bool colliding = false;
     vec2 translation = vec2(0.0f, 0.0f);
     float rotation = 0.0f;
 
@@ -83,15 +84,59 @@ CollisionResult getCollision(Circle c, Triangle t) {
         t.a = b;
         t.b = a;
     }
-    
-    ab = t.b - t.a;
+
+    // Translate the space such that a is at the origin.
+    translation = -t.a;
+    c.translate(translation);
+    t.translate(translation);
+
+    // Check if the circle is colliding with ab.
+    colliding = c.centre.x >= t.a.x && c.centre.x <= t.b.x && c.centre.y <= 0.0f && c.centre.y > -c.radius;
+    if (colliding) {
+        
+        // Get the depth, normal, contact point information.
+        float depth = (c.radius + c.centre.y) * 0.5f;
+        vec2 normal = vec2(0.0f, -1.0f); // MAYBE FLIP THIS?
+        vec2 point = vec2(c.centre.x, depth);
+
+        // Translate back into global space.
+        point -= translation;
+        rotateVector(normal, -rotation, vec2(0.0f, 0.0f));
+        rotateVector(point, -rotation, vec2(0.0f, 0.0f));
+
+        return {true, normal, point, depth};
+    }
+
+    // Check if the circle is colliding with ac.
+
+    // Rotate the circle into a new space to determine if it is colliding.
     ac = t.c - t.a;
-    bc = t.c - t.b;
+    vec2 centre = c.centre;
+    angle = ((atan(ac.y / ac.x)) * 180) / M_PI;
+    rotateVector(centre, -angle, vec2(0.0f, 0.0f));
 
-    std::cout << "A: (" << t.a.x << ", " << t.a.y << ")\n";
-    std::cout << "B: (" << t.b.x << ", " << t.b.y << ")\n";
-    std::cout << "C: (" << t.c.x << ", " << t.c.y << ")\n";
+    colliding = centre.x >= 0.0f && centre.x <= glm::length(t.c) && centre.y >= 0.0f && centre.y < c.radius;
+    if (colliding) {
 
-    return {false, vec2(0.0f, 0.0f), 0.0f};
+        // Get the depth, normal, contact point information.
+        float depth = (c.radius - centre.y) * 0.5f;
+        vec2 normal = vec2(0.0f, 1.0f); // MAYBE FLIP THIS?
+        vec2 point = vec2(centre.x, -depth);
+
+        // Rotate the normal and point by the angle.
+        rotateVector(normal, angle, vec2(0.0f, 0.0f));
+        rotateVector(point, angle, vec2(0.0f, 0.0f));
+
+        // Translate back into global space.
+        point -= translation;
+        rotateVector(normal, -rotation, vec2(0.0f, 0.0f));
+        rotateVector(point, -rotation, vec2(0.0f, 0.0f));
+
+        return {true, normal, point, depth};
+    }
+
+    // Check if the circle is colliding with bc.
+
+    return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
 
 }

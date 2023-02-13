@@ -2,6 +2,7 @@
 
 struct CollisionResult {
     bool colliding;
+    vec2 normal;
     vec2 point;
     float depth;
 };
