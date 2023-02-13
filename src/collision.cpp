@@ -108,8 +108,6 @@ CollisionResult getCollision(Circle c, Triangle t) {
     }
 
     // Check if the circle is colliding with ac.
-
-    // Rotate the circle into a new space to determine if it is colliding.
     ac = t.c - t.a;
     vec2 centre = c.centre;
     angle = ((atan(ac.y / ac.x)) * 180) / M_PI;
@@ -136,6 +134,30 @@ CollisionResult getCollision(Circle c, Triangle t) {
     }
 
     // Check if the circle is colliding with bc.
+    bc = t.c - t.b;
+    centre = c.centre;
+    angle = ((atan(bc.y / bc.x)) * 180) / M_PI;
+    rotateVector(centre, -angle, t.b);
+
+    colliding = centre.x >= t.b.x - glm::length(bc) && centre.x <= t.b.x && centre.y >= 0.0f && centre.y < c.radius;
+    if (colliding) {
+
+        // Get the depth, normal, contact point information.
+        float depth = (c.radius - centre.y) * 0.5f;
+        vec2 normal = vec2(0.0f, 1.0f); // MAYBE FLIP THIS?
+        vec2 point = vec2(centre.x, -depth);
+
+        // Rotate the normal and point by the angle.
+        rotateVector(normal, angle, t.b);
+        rotateVector(point, angle, t.b);
+
+        // Translate back into global space.
+        point -= translation;
+        rotateVector(normal, -rotation, vec2(0.0f, 0.0f));
+        rotateVector(point, -rotation, vec2(0.0f, 0.0f));
+
+        return {true, normal, point, depth};
+    }
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
 
