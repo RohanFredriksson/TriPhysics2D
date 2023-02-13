@@ -3,8 +3,6 @@
 #include <glm/geometric.hpp>
 #include "collision.hpp"
 
-#include <iostream>
-
 CollisionResult getCollision(Circle a, Circle b) {
 
     // Determine if the two circles are colliding.
@@ -159,6 +157,56 @@ CollisionResult getCollision(Circle c, Triangle t) {
         return {true, normal, point, depth};
     }
 
-    return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
+    // Check if the circle is colliding with a.
+    vec2 difference = c.centre - t.a;
+    if (glm::dot(difference, difference) < c.radius * c.radius) {
 
+        vec2 normal = glm::normalize(difference);
+        vec2 depthVector = ((normal * c.radius) - difference) * 0.5f;
+        float depth = glm::length(depthVector);
+        vec2 point = t.a - depthVector;
+
+        // Translate back into global space.
+        point -= translation;
+        rotateVector(normal, -rotation, vec2(0.0f, 0.0f));
+        rotateVector(point, -rotation, vec2(0.0f, 0.0f));
+
+        return {true, normal, point, depth};
+    }
+
+    // Check if the circle is colliding with b.
+    difference = c.centre - t.b;
+    if (glm::dot(difference, difference) < c.radius * c.radius) {
+
+        vec2 normal = glm::normalize(difference);
+        vec2 depthVector = ((normal * c.radius) - difference) * 0.5f;
+        float depth = glm::length(depthVector);
+        vec2 point = t.b - depthVector;
+
+        // Translate back into global space.
+        point -= translation;
+        rotateVector(normal, -rotation, vec2(0.0f, 0.0f));
+        rotateVector(point, -rotation, vec2(0.0f, 0.0f));
+
+        return {true, normal, point, depth};
+    }
+
+    // Check if the circle is colliding with c.
+    difference = c.centre - t.c;
+    if (glm::dot(difference, difference) < c.radius * c.radius) {
+
+        vec2 normal = glm::normalize(difference);
+        vec2 depthVector = ((normal * c.radius) - difference) * 0.5f;
+        float depth = glm::length(depthVector);
+        vec2 point = t.c - depthVector;
+
+        // Translate back into global space.
+        point -= translation;
+        rotateVector(normal, -rotation, vec2(0.0f, 0.0f));
+        rotateVector(point, -rotation, vec2(0.0f, 0.0f));
+
+        return {true, normal, point, depth};
+    }
+
+    return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
 }
