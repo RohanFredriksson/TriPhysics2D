@@ -5,8 +5,10 @@
 
 int main() {
 
-    Circle a = Circle(1.0f, vec2(0.0f, 0.0f));
-    std::cout << a.radius << "\n";
+    Triangle t = Triangle(vec2(0.0f, 1.0f), vec2(1.0f, 0.0f), vec2(2.0f, 2.0f));
+    Circle c = Circle(1.0f, vec2(0.0f, 0.0f));
+
+    getCollision(c, t);
 
     if(!Window::init()) {return 1;}
     Window::loop();

@@ -2,18 +2,14 @@
 #include <algorithm>
 #include "primitives.hpp"
 
-namespace {
+void rotateVector(vec2& vec, float degrees, vec2 origin) {
 
-    void rotateVector(vec2& vec, float degrees, vec2 origin) {
+    float x = vec.x - origin.x;
+    float y = vec.y - origin.y;
+    float radians = degrees * M_PI / 180.0f;
 
-        float x = vec.x - origin.x;
-        float y = vec.y - origin.y;
-        float radians = degrees * M_PI / 180.0f;
-
-        vec.x = origin.x + ((x * (float) cos(radians)) - (y * (float) sin(radians)));
-        vec.y = origin.y + ((x * (float) sin(radians)) + (y * (float) cos(radians)));
-
-    }
+    vec.x = origin.x + ((x * (float) cos(radians)) - (y * (float) sin(radians)));
+    vec.y = origin.y + ((x * (float) sin(radians)) + (y * (float) cos(radians)));
 
 }
 

@@ -4,6 +4,8 @@
 
 using glm::vec2;
 
+void rotateVector(vec2& vec, float degrees, vec2 origin);
+
 class Line {
 
     public:
