@@ -220,4 +220,12 @@ namespace Renderer {
 
     }
 
+    void drawTriangle(vec2 a, vec2 b, vec2 c, vec3 colour, int lifetime) {
+
+        drawLine(a, b, colour, lifetime);
+        drawLine(a, c, colour, lifetime);
+        drawLine(b, c, colour, lifetime);
+
+    }
+
 }

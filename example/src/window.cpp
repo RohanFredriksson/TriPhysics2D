@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include "trip2d/trip2d.hpp"
 
 #include "window.hpp"
 #include "listener.hpp"
@@ -17,11 +18,24 @@ namespace {
     int width = 800;
     int height = 800;
 
+    Circle circle = Circle(1.0f, vec2(0.0f, 0.0f));
+    Triangle triangle = Triangle(vec2(-1.5f, -1.0f), vec2(2.5f, -0.5f), vec2(-0.5f, 0.5f));
+    CollisionResult result;
+
     void update(float dt) {
 
         if (MouseListener::isMouseDragging()) {
             if (MouseListener::getDx() != 0) {camera->addPosition(vec2(-MouseListener::getWorldDx(), 0.0f));}
             if (MouseListener::getDy() != 0) {camera->addPosition(vec2(0.0f, MouseListener::getWorldDy()));}
+        }
+
+        circle.centre.x = (float) MouseListener::getWorldX();
+        circle.centre.y = (float) MouseListener::getWorldY();
+
+        result = getCollision(circle, triangle);
+
+        if (glm::length(result.normal) > 1.1f) {
+            std::cout << result.normal.x << ", " << result.normal.y << "\n";
         }
 
     }
@@ -32,7 +46,18 @@ namespace {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        Renderer::drawLine(vec2(-1.0f, -1.0f), vec2(1.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), 1);
+        if (result.colliding) {
+            Renderer::drawCircle(circle.centre, circle.radius, vec3(0.0f, 1.0f, 0.0f), 1);
+            Renderer::drawTriangle(triangle.a, triangle.b, triangle.c, vec3(0.0f, 1.0f, 0.0f), 1);
+            Renderer::drawLine(result.point, result.point + result.normal, vec3(0.0f, 1.0f, 0.0f), 1);
+        } 
+
+        else {
+            Renderer::drawCircle(circle.centre, circle.radius, vec3(1.0f, 0.0f, 0.0f), 1);
+            Renderer::drawTriangle(triangle.a, triangle.b, triangle.c, vec3(1.0f, 0.0f, 0.0f), 1);
+        }
+        
+        
 
         // Render the lines.
         Renderer::render();
@@ -92,7 +117,7 @@ namespace Window {
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         // Initialise the camera
-        camera = new Camera(vec2(0.0f, 0.0f), vec2(3.0f, 3.0f), 1.0f);
+        camera = new Camera(vec2(0.0f, 0.0f), vec2(10.0f, 10.0f), 1.0f);
 
         // Initialise the renderer
         Renderer::init();

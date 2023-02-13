@@ -75,7 +75,7 @@ void MouseListener::calcOrthoY() {
 
     float currentY = ((float) y / Window::getHeight()) * 2.0f - 1.0f;
     Camera* camera = Window::getCamera();
-    worldY = camera->getPosition().y + (currentY / 2.0f) * (camera->getProjectionSize().y / camera->getZoom());
+    worldY = camera->getPosition().y - (currentY / 2.0f) * (camera->getProjectionSize().y / camera->getZoom());
 
 }
 

@@ -25,4 +25,6 @@ namespace Renderer {
     void drawCircle(vec2 centre, float radius, vec3 colour);
     void drawCircle(vec2 centre, float radius);
 
+    void drawTriangle(vec2 a, vec2 b, vec2 c, vec3 colour, int lifetime);
+
 }

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/geometric.hpp>
 #include "collision.hpp"
@@ -146,7 +147,7 @@ CollisionResult getCollision(Circle c, Triangle t) {
         vec2 point = vec2(centre.x, -depth);
 
         // Rotate the normal and point by the angle.
-        rotateVector(normal, angle, t.b);
+        rotateVector(normal, angle, vec2(0.0f, 0.0f));
         rotateVector(point, angle, t.b);
 
         // Translate back into global space.
