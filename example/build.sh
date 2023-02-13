@@ -7,6 +7,7 @@ cp -r ../src dependencies/trip2d/
 cp -r ../include dependencies/trip2d/
 cp -r ../dependencies dependencies/trip2d/dependencies
 cp ../CMakeLists.txt dependencies/trip2d/
+cp ../trip2d.hpp dependencies/trip2d/
 mkdir build 2> /dev/null
 cd build
 if [ -f windows ]; then

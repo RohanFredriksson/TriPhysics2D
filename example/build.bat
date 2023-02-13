@@ -6,6 +6,7 @@ echo d | xcopy ..\src dependencies\trip2d\src /E > nul
 echo d | xcopy ..\include dependencies\trip2d\include /E > nul
 echo d | xcopy ..\dependencies dependencies\trip2d\dependencies /E > nul
 echo d | xcopy ..\CMakeLists.txt dependencies\trip2d\ > nul
+echo d | xcopy ..\trip2d.hpp dependencies\trip2d\ > nul
 if not exist "build" mkdir build
 cd build
 if exist posix (
