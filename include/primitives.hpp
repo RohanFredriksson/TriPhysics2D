@@ -4,67 +4,48 @@
 
 using glm::vec2;
 
-class Shape;
-
-class Body {
-
-    public:
-
-        Shape* collider;
-        vec2 force;
-        vec2 velocity;
-
-        vec2 position;
-        float rotation;
-        
-        float mass;
-        float restitution;
-        float friction;
-        bool sensor;
-
-        Body();
-        void rotate(float degrees);
-        void translate(vec2 vector);
-
-};
-
-class Shape {
+class Line {
 
     public:
         
-        Body* body;
-        virtual void rotate(float degrees);
+        vec2 start;
+        vec2 end;
+
+        Line(vec2 start, vec2 end);
+        void rotate(float degrees, vec2 origin);
+        void translate(vec2 by);
+
+        vec2 getMin();
+        vec2 getMax();
+        float getGradient();
+        float getIntercept();
+        bool isVertical();
 
 };
 
-class Triangle : public Shape {
+class Triangle {
 
     public:
 
-        vec2 p2a;
-        vec2 p2b;
-        vec2 p2c;
+        vec2 a;
+        vec2 b;
+        vec2 c;
 
-        Triangle(vec2 p2a, vec2 p2b, vec2 p2c);
-        void rotate(float degrees) override;
-        
-        vec2 a();
-        vec2 b();
-        vec2 c();
-
-        vec2 a2b();
-        vec2 a2c();
-        vec2 b2c();
+        Triangle(vec2 a, vec2 b, vec2 c);
+        void rotate(float degrees, vec2 origin);
+        void translate(vec2 by);
 
 };
 
-class Circle : public Shape {
+class Circle {
 
     public:
 
+        vec2 centre;
         float radius;
 
-        Circle(float radius);
-        void rotate(float degrees) override;
+        Circle(vec2 centre, float radius);
+        void rotate(float degrees, vec2 origin);
+        void translate(vec2 by);
 
 };
