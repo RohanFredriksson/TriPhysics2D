@@ -41,10 +41,10 @@ class Circle {
 
     public:
 
-        vec2 centre;
         float radius;
+        vec2 centre;
 
-        Circle(vec2 centre, float radius);
+        Circle(float radius, vec2 centre);
         void rotate(float degrees, vec2 origin);
         void translate(vec2 by);
 

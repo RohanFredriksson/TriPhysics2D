@@ -70,9 +70,9 @@ void Triangle::translate(vec2 by) {
     this->c += by;
 }
 
-Circle::Circle(vec2 centre, float radius) {
-    this->centre = centre;
+Circle::Circle(float radius, vec2 centre) {
     this->radius = radius;
+    this->centre = centre;
 }
 
 void Circle::rotate(float degrees, vec2 origin)  {
