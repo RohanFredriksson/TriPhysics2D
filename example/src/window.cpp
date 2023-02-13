@@ -26,7 +26,11 @@ namespace {
 
         if (MouseListener::isMouseDragging()) {
             if (MouseListener::getDx() != 0) {camera->addPosition(vec2(-MouseListener::getWorldDx(), 0.0f));}
-            if (MouseListener::getDy() != 0) {camera->addPosition(vec2(0.0f, MouseListener::getWorldDy()));}
+            if (MouseListener::getDy() != 0) {camera->addPosition(vec2(0.0f, -MouseListener::getWorldDy()));}
+        }
+
+        if (MouseListener::getScrollY() != 0.0) {
+            triangle.rotate(5.0f * MouseListener::getScrollY(), vec2(0.0f, 0.0f));
         }
 
         circle.centre.x = (float) MouseListener::getWorldX();
