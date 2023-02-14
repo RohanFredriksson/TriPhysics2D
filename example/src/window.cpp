@@ -38,10 +38,6 @@ namespace {
 
         result = getCollision(circle, triangle);
 
-        if (glm::length(result.normal) > 1.1f) {
-            std::cout << result.normal.x << ", " << result.normal.y << "\n";
-        }
-
     }
 
     void render() {

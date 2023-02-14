@@ -79,6 +79,31 @@ namespace {
 
     }
 
+    bool belowLine(vec2 point, vec2 start, vec2 end) {
+
+        if (point.x < start.x) {return false;}
+        if (point.x > end.x) {return false;}
+        if (start.x == end.x) {return false;}
+
+        float m = (end.y - start.y) / (end.x / start.x);
+        float y = m * (point.x - start.x) + start.y;
+
+        return point.y < y;
+
+    }
+
+    bool aboveLine(vec2 point, vec2 start, vec2 end) {
+
+        if (point.x < start.x) {return false;}
+        if (point.x > end.x) {return false;}
+
+        float m = (end.y - start.y) / (end.x / start.x);
+        float y = m * (point.x - start.x) + start.y;
+
+        return point.y > y;
+
+    }
+
 }
 
 CollisionResult getCollision(Circle a, Circle b) {
@@ -112,7 +137,16 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     colliding = aMin.x < bMax.x && aMax.x > bMin.x && aMin.y < bMax.y && aMax.y > bMin.y;
     if (!colliding) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
+    // Localise a and determine if b collides with a.
+    TriangleLocalisation localisation = localise(a);
+    vec2 translation = localisation.translation;
+    float rotation = localisation.rotation;
 
+    Triangle la = localisation.triangle;
+    Triangle lb = Triangle(b.a, b.b, b.c);
+
+    lb.rotate(rotation, vec2(0.0f, 0.0f));
+    lb.translate(translation);
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
 }

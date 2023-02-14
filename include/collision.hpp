@@ -6,7 +6,6 @@ struct CollisionResult {
     vec2 point;
     float depth;
 };
-typedef struct CollisionResult CollisionResult;
 
 CollisionResult getCollision(Circle a, Circle b);
 CollisionResult getCollision(Triangle a, Triangle b);
