@@ -4,6 +4,8 @@
 #include <glm/geometric.hpp>
 #include "collision.hpp"
 
+#include <iostream>
+
 CollisionResult getCollision(Circle a, Circle b) {
 
     // Determine if the two circles are colliding.
@@ -29,6 +31,14 @@ CollisionResult getCollision(Circle c, Triangle t) {
     bool colliding = false;
     vec2 translation = vec2(0.0f, 0.0f);
     float rotation = 0.0f;
+
+    // Do a bounding box check to try see if a collision is possible
+    vec2 min = vec2(std::min(std::min(t.a.x, t.b.x), t.c.x) - c.radius, std::min(std::min(t.a.y, t.b.y), t.c.y) - c.radius);
+    vec2 max = vec2(std::max(std::max(t.a.x, t.b.x), t.c.x) + c.radius, std::max(std::max(t.a.y, t.b.y), t.c.y) + c.radius);
+
+    // Check if the circle is in the triangles aabb
+    colliding = c.centre.x >= min.x && c.centre.x <= max.x && c.centre.y >= min.y && c.centre.y <= max.y;
+    if (!colliding) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
     // Find the longest side length
     vec2 ab = t.b - t.a;

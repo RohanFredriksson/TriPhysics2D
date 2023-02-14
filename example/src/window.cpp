@@ -60,8 +60,6 @@ namespace {
             Renderer::drawCircle(circle.centre, circle.radius, vec3(1.0f, 0.0f, 0.0f), 1);
             Renderer::drawTriangle(triangle.a, triangle.b, triangle.c, vec3(1.0f, 0.0f, 0.0f), 1);
         }
-        
-        
 
         // Render the lines.
         Renderer::render();
