@@ -388,9 +388,21 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     }
 
     if (aPoints == 1 && bPoints == 1) {
-        vec2 normal = glm::normalize(aPoint - bPoint);
+        
         vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
+        vec2 normal = glm::normalize(aPoint - bPoint);
         float depth = glm::length(bPoint - aPoint) * 0.5f;
+
+        if (aDepth < depth) {
+            depth = aDepth;
+            normal = aNormal;
+        }
+
+        if (bDepth < depth) {
+            depth = bDepth;
+            normal = bNormal;
+        }
+
         return {true, normal, point, depth};
     }
 
