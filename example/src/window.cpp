@@ -50,7 +50,7 @@ namespace {
         if (result.colliding) {
             Renderer::drawTriangle(a.a, a.b, a.c, vec3(0.0f, 1.0f, 0.0f), 1);
             Renderer::drawTriangle(b.a, b.b, b.c, vec3(0.0f, 1.0f, 0.0f), 1);
-            Renderer::drawLine(result.point, result.point + result.normal, vec3(0.0f, 1.0f, 0.0f), 1);
+            Renderer::drawLine(result.point, result.point + result.normal, vec3(0.0f, 0.0f, 1.0f), 1);
         } 
 
         else {

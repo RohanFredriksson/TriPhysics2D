@@ -202,6 +202,22 @@ namespace {
         return glm::normalize(result);
     }
 
+    float distance(vec2 point, vec2 start, vec2 end) {
+
+        // Translate the space to the origin
+        point -= end;
+        start -= end;
+
+        // Rotate the space such that start is on the x axis.
+        float angle = ((atan(start.y / start.x)) * 180) / M_PI;
+        rotateVector(point, -angle, vec2(0.0f, 0.0f));
+        rotateVector(start, -angle, vec2(0.0f, 0.0f));
+
+        // The perpendicular distance is the absolute value of point.y after rotation.
+        return fabsf(point.y);
+
+    }
+
 }
 
 CollisionResult getCollision(Circle a, Circle b) {
@@ -253,12 +269,13 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     vec2 aNormal = vec2(0.0f, 0.0f);
     vec2 aPoint = vec2(0.0f, 0.0f);
     int aPoints = 0;
+    float aDepth = 0.0f;
 
     if (intersects(lab.a, laa)) {
 
-        if      (intersects(b.a, b.b, a.a, a.b)) {aNormal = normal(a.b, a.a);}
-        else if (intersects(b.a, b.b, a.a, a.c)) {aNormal = normal(a.a, a.c);}
-        else if (intersects(b.a, b.b, a.b, a.c)) {aNormal = normal(a.b, a.c);}
+        if      (intersects(b.a, b.b, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.a, a.a, a.b) * 0.5f;}
+        else if (intersects(b.a, b.b, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.a, a.a, a.c) * 0.5f;}
+        else if (intersects(b.a, b.b, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.a, a.b, a.c) * 0.5f;}
 
         aPoint += b.a;
         aPoints++;
@@ -268,9 +285,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lab.b, laa)) {
 
         if (aPoints == 0) {
-            if      (intersects(b.b, b.c, a.a, a.b)) {aNormal = normal(a.a, a.b);}
-            else if (intersects(b.b, b.c, a.a, a.c)) {aNormal = normal(a.c, a.a);}
-            else if (intersects(b.b, b.c, a.b, a.c)) {aNormal = normal(a.b, a.c);}
+            if      (intersects(b.b, b.c, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.b, a.a, a.b) * 0.5f;}
+            else if (intersects(b.b, b.c, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.b, a.a, a.c) * 0.5f;}
+            else if (intersects(b.b, b.c, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.b, a.b, a.c) * 0.5f;}
         }
 
         aPoint += b.b;
@@ -281,9 +298,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lab.c, laa)) {
 
         if (aPoints == 0) {
-            if      (intersects(b.c, b.a, a.a, a.b)) {aNormal = normal(a.a, a.b);}
-            else if (intersects(b.c, b.a, a.a, a.c)) {aNormal = normal(a.a, a.c);}
-            else if (intersects(b.c, b.a, a.b, a.c)) {aNormal = normal(a.b, a.c);}
+            if      (intersects(b.c, b.a, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.c, a.a, a.b) * 0.5f;}
+            else if (intersects(b.c, b.a, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.c, a.a, a.c) * 0.5f;}
+            else if (intersects(b.c, b.a, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.c, a.b, a.c) * 0.5f;}
         }
 
         aPoint += b.c;
@@ -297,12 +314,13 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     vec2 bNormal = vec2(0.0f, 0.0f);
     vec2 bPoint = vec2(0.0f, 0.0f);
     int bPoints = 0;
+    float bDepth = 0.0f;
 
     if (intersects(lba.a, lbb)) {
 
-        if      (intersects(a.a, a.b, b.a, b.b)) {bNormal = normal(b.b, b.a);}
-        else if (intersects(a.a, a.b, b.a, b.c)) {bNormal = normal(b.a, b.c);}
-        else if (intersects(a.a, a.b, b.b, b.c)) {bNormal = normal(b.b, b.c);}
+        if      (intersects(a.a, a.b, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.a, b.a, b.b) * 0.5f;}
+        else if (intersects(a.a, a.b, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.a, b.a, b.c) * 0.5f;}
+        else if (intersects(a.a, a.b, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.a, b.b, b.c) * 0.5f;}
 
         bPoint += a.a;
         bPoints++;
@@ -312,9 +330,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lba.b, lbb)) {
 
         if (bPoints == 0) {
-            if      (intersects(a.b, a.c, b.a, b.b)) {bNormal = normal(b.b, b.a);}
-            else if (intersects(a.b, a.c, b.a, b.c)) {bNormal = normal(b.a, b.c);}
-            else if (intersects(a.b, a.c, b.b, b.c)) {bNormal = normal(b.c, b.b);}
+            if      (intersects(a.b, a.c, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.b, b.a, b.b) * 0.5f;}
+            else if (intersects(a.b, a.c, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.b, b.a, b.c) * 0.5f;}
+            else if (intersects(a.b, a.c, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.b, b.b, b.c) * 0.5f;}
         }
 
         bPoint += a.b;
@@ -325,9 +343,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lba.c, lbb)) {
 
         if (bPoints == 0) {
-            if      (intersects(a.c, a.a, b.a, b.b)) {bNormal = normal(b.b, b.a);}
-            else if (intersects(a.c, a.a, b.a, b.c)) {bNormal = normal(b.a, b.c);}
-            else if (intersects(a.c, a.a, b.b, b.c)) {bNormal = normal(b.b, b.c);}
+            if      (intersects(a.c, a.a, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.c, b.a, b.b) * 0.5f;}
+            else if (intersects(a.c, a.a, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.c, b.a, b.c) * 0.5f;}
+            else if (intersects(a.c, a.a, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.c, b.b, b.c) * 0.5f;}
         }
 
         bPoint += a.c;
@@ -341,6 +359,10 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     // If the more points in b were found than a, swap the problem
     if (aPoints < bPoints) {
 
+        Triangle tmpTriangle = a;
+        a = b;
+        b = tmpTriangle;
+
         vec2 tmpNormal = aNormal;
         aNormal = bNormal;
         bNormal = tmpNormal;
@@ -349,32 +371,40 @@ CollisionResult getCollision(Triangle a, Triangle b) {
         aPoint = bPoint;
         bPoint = tmpPoint;
 
-        float tmpPoints = aPoints;
+        int tmpPoints = aPoints;
         aPoints = bPoints;
         bPoints = tmpPoints;
+
+        float tmpDepth = aDepth;
+        aDepth = bDepth;
+        bDepth = tmpDepth;
 
     }
 
     if (aPoints == 1 && bPoints == 0) {
-        return {true, aNormal, aPoint, -1.0f};
+        vec2 pointToCentroid = b.getCentroid() - aPoint;
+        pointToCentroid = glm::normalize(pointToCentroid);
+        return {true, aNormal, aPoint + (aDepth * pointToCentroid), aDepth};
     }
 
     if (aPoints == 1 && bPoints == 1) {
         vec2 normal = glm::normalize(aPoint - bPoint);
         vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
-        return {true, normal, point, -1.0f};
+        float depth = glm::length(bPoint - aPoint) * 0.5f;
+        return {true, normal, point, depth};
     }
 
     if (aPoints == 2 && bPoints == 0) {
-        vec2 point = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f);
-        return {true, aNormal, point, -1.0f};
+        vec2 point = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f) - aDepth * aNormal;
+        return {true, aNormal, point, aDepth};
     }
 
     if (aPoints == 2 && bPoints == 1) {
         aPoint = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f);
         vec2 normal = glm::normalize(aPoint - bPoint);
         vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
-        return {true, normal, point, -1.0f};
+        float depth = glm::length(bPoint - aPoint) * 0.5f;
+        return {true, normal, point, depth};
     }
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
