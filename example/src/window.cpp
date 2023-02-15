@@ -19,7 +19,7 @@ namespace {
     int height = 800;
 
     Triangle a = Triangle(vec2(-2.5f, -1.0f), vec2(1.5f, -0.5f), vec2(-1.5f, 0.5f));
-    Triangle b = Triangle(vec2(-1.5f, -1.0f), vec2(2.5f, -0.5f), vec2(-0.5f, 0.5f));
+    Triangle b = Triangle(vec2(-1.5f, -1.0f), vec2(1.5f, -1.0f), vec2(0.5f, 0.5f));
     CollisionResult result;
 
     void update(float dt) {

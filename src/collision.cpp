@@ -4,6 +4,8 @@
 #include <glm/geometric.hpp>
 #include "collision.hpp"
 
+#include <iostream>
+
 namespace {
 
     struct TriangleLocalisation {
@@ -266,8 +268,8 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lab.b, laa)) {
 
         if (aPoints == 0) {
-            if      (intersects(b.b, b.c, a.a, a.b)) {aNormal = normal(a.b, a.a);}
-            else if (intersects(b.b, b.c, a.a, a.c)) {aNormal = normal(a.a, a.c);}
+            if      (intersects(b.b, b.c, a.a, a.b)) {aNormal = normal(a.a, a.b);}
+            else if (intersects(b.b, b.c, a.a, a.c)) {aNormal = normal(a.c, a.a);}
             else if (intersects(b.b, b.c, a.b, a.c)) {aNormal = normal(a.b, a.c);}
         }
 
@@ -279,7 +281,7 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lab.c, laa)) {
 
         if (aPoints == 0) {
-            if      (intersects(b.c, b.a, a.a, a.b)) {aNormal = normal(a.b, a.a);}
+            if      (intersects(b.c, b.a, a.a, a.b)) {aNormal = normal(a.a, a.b);}
             else if (intersects(b.c, b.a, a.a, a.c)) {aNormal = normal(a.a, a.c);}
             else if (intersects(b.c, b.a, a.b, a.c)) {aNormal = normal(a.b, a.c);}
         }
@@ -312,7 +314,7 @@ CollisionResult getCollision(Triangle a, Triangle b) {
         if (bPoints == 0) {
             if      (intersects(a.b, a.c, b.a, b.b)) {bNormal = normal(b.b, b.a);}
             else if (intersects(a.b, a.c, b.a, b.c)) {bNormal = normal(b.a, b.c);}
-            else if (intersects(a.b, a.c, b.b, b.c)) {bNormal = normal(b.b, b.c);}
+            else if (intersects(a.b, a.c, b.b, b.c)) {bNormal = normal(b.c, b.b);}
         }
 
         bPoint += a.b;
@@ -358,7 +360,7 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     }
 
     if (aPoints == 1 && bPoints == 1) {
-        vec2 normal = glm::normalize(bPoint - aPoint);
+        vec2 normal = glm::normalize(aPoint - bPoint);
         vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
         return {true, normal, point, -1.0f};
     }
@@ -370,7 +372,7 @@ CollisionResult getCollision(Triangle a, Triangle b) {
 
     if (aPoints == 2 && bPoints == 1) {
         aPoint = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f);
-        vec2 normal = glm::normalize(bPoint - aPoint);
+        vec2 normal = glm::normalize(aPoint - bPoint);
         vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
         return {true, normal, point, -1.0f};
     }
