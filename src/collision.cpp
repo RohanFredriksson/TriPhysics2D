@@ -273,9 +273,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
 
     if (intersects(lab.a, laa)) {
 
-        if      (intersects(b.a, b.b, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.a, a.a, a.b) * 0.5f;}
-        else if (intersects(b.a, b.b, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.a, a.a, a.c) * 0.5f;}
-        else if (intersects(b.a, b.b, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.a, a.b, a.c) * 0.5f;}
+        if      (intersects(b.a, b.b, a.a, a.b) || intersects(b.a, b.c, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.a, a.a, a.b) * 0.5f;}
+        else if (intersects(b.a, b.b, a.a, a.c) || intersects(b.a, b.c, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.a, a.a, a.c) * 0.5f;}
+        else if (intersects(b.a, b.b, a.b, a.c) || intersects(b.a, b.c, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.a, a.b, a.c) * 0.5f;}
 
         aPoint += b.a;
         aPoints++;
@@ -285,9 +285,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lab.b, laa)) {
 
         if (aPoints == 0) {
-            if      (intersects(b.b, b.c, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.b, a.a, a.b) * 0.5f;}
-            else if (intersects(b.b, b.c, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.b, a.a, a.c) * 0.5f;}
-            else if (intersects(b.b, b.c, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.b, a.b, a.c) * 0.5f;}
+            if      (intersects(b.b, b.c, a.a, a.b) || intersects(b.b, b.a, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.b, a.a, a.b) * 0.5f;}
+            else if (intersects(b.b, b.c, a.a, a.c) || intersects(b.b, b.a, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.b, a.a, a.c) * 0.5f;}
+            else if (intersects(b.b, b.c, a.b, a.c) || intersects(b.b, b.a, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.b, a.b, a.c) * 0.5f;}
         }
 
         aPoint += b.b;
@@ -298,9 +298,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lab.c, laa)) {
 
         if (aPoints == 0) {
-            if      (intersects(b.c, b.a, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.c, a.a, a.b) * 0.5f;}
-            else if (intersects(b.c, b.a, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.c, a.a, a.c) * 0.5f;}
-            else if (intersects(b.c, b.a, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.c, a.b, a.c) * 0.5f;}
+            if      (intersects(b.c, b.a, a.a, a.b) || intersects(b.c, b.b, a.a, a.b)) {aNormal = normal(a.a, a.b); aDepth = distance(b.c, a.a, a.b) * 0.5f;}
+            else if (intersects(b.c, b.a, a.a, a.c) || intersects(b.c, b.b, a.a, a.c)) {aNormal = normal(a.c, a.a); aDepth = distance(b.c, a.a, a.c) * 0.5f;}
+            else if (intersects(b.c, b.a, a.b, a.c) || intersects(b.c, b.b, a.b, a.c)) {aNormal = normal(a.b, a.c); aDepth = distance(b.c, a.b, a.c) * 0.5f;}
         }
 
         aPoint += b.c;
@@ -318,9 +318,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
 
     if (intersects(lba.a, lbb)) {
 
-        if      (intersects(a.a, a.b, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.a, b.a, b.b) * 0.5f;}
-        else if (intersects(a.a, a.b, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.a, b.a, b.c) * 0.5f;}
-        else if (intersects(a.a, a.b, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.a, b.b, b.c) * 0.5f;}
+        if      (intersects(a.a, a.b, b.a, b.b) || intersects(a.a, a.c, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.a, b.a, b.b) * 0.5f;}
+        else if (intersects(a.a, a.b, b.a, b.c) || intersects(a.a, a.c, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.a, b.a, b.c) * 0.5f;}
+        else if (intersects(a.a, a.b, b.b, b.c) || intersects(a.a, a.c, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.a, b.b, b.c) * 0.5f;}
 
         bPoint += a.a;
         bPoints++;
@@ -330,9 +330,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lba.b, lbb)) {
 
         if (bPoints == 0) {
-            if      (intersects(a.b, a.c, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.b, b.a, b.b) * 0.5f;}
-            else if (intersects(a.b, a.c, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.b, b.a, b.c) * 0.5f;}
-            else if (intersects(a.b, a.c, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.b, b.b, b.c) * 0.5f;}
+            if      (intersects(a.b, a.c, b.a, b.b) || intersects(a.b, a.a, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.b, b.a, b.b) * 0.5f;}
+            else if (intersects(a.b, a.c, b.a, b.c) || intersects(a.b, a.a, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.b, b.a, b.c) * 0.5f;}
+            else if (intersects(a.b, a.c, b.b, b.c) || intersects(a.b, a.a, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.b, b.b, b.c) * 0.5f;}
         }
 
         bPoint += a.b;
@@ -343,9 +343,9 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     if (intersects(lba.c, lbb)) {
 
         if (bPoints == 0) {
-            if      (intersects(a.c, a.a, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.c, b.a, b.b) * 0.5f;}
-            else if (intersects(a.c, a.a, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.c, b.a, b.c) * 0.5f;}
-            else if (intersects(a.c, a.a, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.c, b.b, b.c) * 0.5f;}
+            if      (intersects(a.c, a.a, b.a, b.b) || intersects(a.c, a.b, b.a, b.b)) {bNormal = normal(b.b, b.a); bDepth = distance(a.c, b.a, b.b) * 0.5f;}
+            else if (intersects(a.c, a.a, b.a, b.c) || intersects(a.c, a.b, b.a, b.c)) {bNormal = normal(b.a, b.c); bDepth = distance(a.c, b.a, b.c) * 0.5f;}
+            else if (intersects(a.c, a.a, b.b, b.c) || intersects(a.c, a.b, b.b, b.c)) {bNormal = normal(b.c, b.b); bDepth = distance(a.c, b.b, b.c) * 0.5f;}
         }
 
         bPoint += a.c;
