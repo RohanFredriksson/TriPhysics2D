@@ -13,6 +13,14 @@ void rotateVector(vec2& vec, float degrees, vec2 origin) {
 
 }
 
+void Shape::rotate(float degrees, vec2 origin) {
+
+}
+
+void Shape::translate(vec2 by) {
+    
+}
+
 Triangle::Triangle(vec2 a, vec2 b, vec2 c) {
     this->a = a;
     this->b = b;
@@ -38,10 +46,6 @@ vec2 Triangle::getCentroid() {
 Circle::Circle(float radius, vec2 centre) {
     this->radius = radius;
     this->centre = centre;
-}
-
-void Circle::rotate(float degrees, vec2 origin)  {
-    rotateVector(this->centre, degrees, origin);
 }
 
 void Circle::translate(vec2 by) {

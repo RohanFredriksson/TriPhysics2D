@@ -18,8 +18,8 @@ namespace {
     int width = 800;
     int height = 800;
 
-    Triangle a = Triangle(vec2(-2.5f, -1.0f), vec2(1.5f, -0.5f), vec2(-1.5f, 0.5f));
-    Triangle b = Triangle(vec2(-1.5f, -1.0f), vec2(1.5f, -1.0f), vec2(0.5f, 0.5f));
+    Circle a = Circle(1.0f, vec2(1.0f, 1.0f));
+    Triangle b = Triangle(vec2(-1.0f, -0.5f), vec2(1.0f, 0.3f), vec2(0.5f, 2.2f));
     CollisionResult result;
 
     void update(float dt) {
@@ -32,12 +32,7 @@ namespace {
             b.rotate(5.0f * MouseListener::getScrollY(), vec2(0.0f, 0.0f));
         }
 
-        //a.translate(vec2(MouseListener::getWorldDx(), MouseListener::getWorldDy()));
         result = getCollision(a, b);
-
-        //if (glm::length(result.normal) > 1.1f) {
-        //    std::cout << result.normal.x << ", " << result.normal.y << "\n";
-        //}
 
     }
 
@@ -48,14 +43,14 @@ namespace {
         glClear(GL_COLOR_BUFFER_BIT);
 
         if (result.colliding) {
-            Renderer::drawTriangle(a.a, a.b, a.c, vec3(0.0f, 1.0f, 0.0f), 1);
-            Renderer::drawTriangle(b.a, b.b, b.c, vec3(0.0f, 1.0f, 0.0f), 1);
+            Renderer::drawShape(&a, vec3(0.0f, 1.0f, 0.0f), 1);
+            Renderer::drawShape(&b, vec3(0.0f, 1.0f, 0.0f), 1);
             Renderer::drawLine(result.point, result.point + result.normal, vec3(0.0f, 0.0f, 1.0f), 1);
         } 
 
         else {
-            Renderer::drawTriangle(a.a, a.b, a.c, vec3(1.0f, 0.0f, 0.0f), 1);
-            Renderer::drawTriangle(b.a, b.b, b.c, vec3(1.0f, 0.0f, 0.0f), 1);
+            Renderer::drawShape(&a, vec3(1.0f, 0.0f, 0.0f), 1);
+            Renderer::drawShape(&b, vec3(1.0f, 0.0f, 0.0f), 1);
         }
 
         // Render the lines.

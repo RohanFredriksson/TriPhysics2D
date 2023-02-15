@@ -228,4 +228,18 @@ namespace Renderer {
 
     }
 
+    void drawShape(Shape* shape, vec3 colour, int lifetime) {
+
+        if (dynamic_cast<Triangle*>(shape) != nullptr) {
+            Triangle* triangle = (Triangle*) shape;
+            drawTriangle(triangle->a, triangle->b, triangle->c, colour, lifetime);
+        }
+
+        else if (dynamic_cast<Circle*>(shape) != nullptr) {
+            Circle* circle = (Circle*) shape;
+            drawCircle(circle->centre, circle->radius, colour, lifetime);
+        }
+        
+    }
+
 }

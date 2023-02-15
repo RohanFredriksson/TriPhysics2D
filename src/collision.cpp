@@ -224,7 +224,7 @@ CollisionResult getCollision(Circle a, Circle b) {
 
     // Determine if the two circles are colliding.
     float sumRadii = a.radius + b.radius;
-    vec2 distance = b.centre - a.centre;
+    vec2 distance = a.centre - b.centre;
     if (glm::dot(distance, distance) - (sumRadii * sumRadii) > 0) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
     // Find the depth and normal of the collision
@@ -233,9 +233,9 @@ CollisionResult getCollision(Circle a, Circle b) {
 
     // Find the contact point of the collision
     float distanceToPoint = a.radius - depth;
-    vec2 contactPoint = distanceToPoint * normal + a.centre;
+    vec2 point = distanceToPoint * -normal + a.centre;
 
-    return {true, normal, contactPoint, depth};
+    return {true, normal, point, depth};
 }
 
 CollisionResult getCollision(Triangle a, Triangle b) {
@@ -452,7 +452,7 @@ CollisionResult getCollision(Circle c, Triangle t) {
         
         // Get the depth, normal, contact point information.
         float depth = (lc.radius + lc.centre.y) * 0.5f;
-        vec2 normal = vec2(0.0f, -1.0f); // MAYBE FLIP THIS?
+        vec2 normal = vec2(0.0f, -1.0f);
         vec2 point = vec2(lc.centre.x, depth);
 
         // Translate back into global space.
@@ -474,7 +474,7 @@ CollisionResult getCollision(Circle c, Triangle t) {
 
         // Get the depth, normal, contact point information.
         float depth = (lc.radius - centre.y) * 0.5f;
-        vec2 normal = vec2(0.0f, 1.0f); // MAYBE FLIP THIS?
+        vec2 normal = vec2(0.0f, 1.0f);
         vec2 point = vec2(centre.x, -depth);
 
         // Rotate the normal and point by the angle.
@@ -500,7 +500,7 @@ CollisionResult getCollision(Circle c, Triangle t) {
 
         // Get the depth, normal, contact point information.
         float depth = (lc.radius - centre.y) * 0.5f;
-        vec2 normal = vec2(0.0f, 1.0f); // MAYBE FLIP THIS?
+        vec2 normal = vec2(0.0f, 1.0f);
         vec2 point = vec2(centre.x, -depth);
 
         // Rotate the normal and point by the angle.
@@ -544,7 +544,7 @@ CollisionResult getCollision(Circle c, vec2 p) {
     vec2 difference = c.centre - p;
     if (glm::dot(difference, difference) < c.radius * c.radius) {
         
-        vec2 normal = glm::normalize(difference); // MAYBE FLIP THIS?
+        vec2 normal = glm::normalize(difference);
         vec2 depthVector = ((normal * c.radius) - difference) * 0.5f;
         float depth = glm::length(depthVector);
         vec2 point = p - depthVector;
