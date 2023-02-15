@@ -83,7 +83,7 @@ namespace {
 
         if (start.x == end.x) {return point.y < start.y;}
 
-        float m = (end.y - start.y) / (end.x / start.x);
+        float m = (end.y - start.y) / (end.x - start.x);
         float y = m * (point.x - start.x) + start.y;
 
         return point.y < y;
@@ -94,7 +94,7 @@ namespace {
 
         if (start.x == end.x) {return point.y > start.y;}
 
-        float m = (end.y - start.y) / (end.x / start.x);
+        float m = (end.y - start.y) / (end.x - start.x);
         float y = m * (point.x - start.x) + start.y;
 
         return point.y > y;
@@ -194,10 +194,10 @@ namespace {
         return true;
     }
 
-    bool intersects(vec2 start, vec2 end, Triangle localised) {
-
-        return false;
-
+    vec2 normal(vec2 start, vec2 end) {
+        vec2 result = end - start;
+        rotateVector(result, 90.0f, vec2(0.0f, 0.0f));
+        return glm::normalize(result);
     }
 
 }
@@ -248,45 +248,89 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     lba.translate(bLocalisation.translation);
 
     // Find points in triangle B that collide with triangle A.
-    vec2 aPoint = vec2(0.0f, 0.0f);
     vec2 aNormal = vec2(0.0f, 0.0f);
+    vec2 aPoint = vec2(0.0f, 0.0f);
     int aPoints = 0;
 
     if (intersects(lab.a, laa)) {
-        aPoint += lab.a;
+
+        if      (intersects(b.a, b.b, a.a, a.b)) {aNormal = normal(a.b, a.a);}
+        else if (intersects(b.a, b.b, a.a, a.c)) {aNormal = normal(a.a, a.c);}
+        else if (intersects(b.a, b.b, a.b, a.c)) {aNormal = normal(a.b, a.c);}
+
+        aPoint += b.a;
         aPoints++;
+
     }
 
     if (intersects(lab.b, laa)) {
-        aPoint += lab.b;
+
+        if (aPoints == 0) {
+            if      (intersects(b.b, b.c, a.a, a.b)) {aNormal = normal(a.b, a.a);}
+            else if (intersects(b.b, b.c, a.a, a.c)) {aNormal = normal(a.a, a.c);}
+            else if (intersects(b.b, b.c, a.b, a.c)) {aNormal = normal(a.b, a.c);}
+        }
+
+        aPoint += b.b;
         aPoints++;
+
     }
 
     if (intersects(lab.c, laa)) {
-        aPoint += lab.c;
+
+        if (aPoints == 0) {
+            if      (intersects(b.c, b.a, a.a, a.b)) {aNormal = normal(a.b, a.a);}
+            else if (intersects(b.c, b.a, a.a, a.c)) {aNormal = normal(a.a, a.c);}
+            else if (intersects(b.c, b.a, a.b, a.c)) {aNormal = normal(a.b, a.c);}
+        }
+
+        aPoint += b.c;
         aPoints++;
+
     }
 
     if (aPoints == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
     // Find points in triangle A that collide with triangle B.
-    vec2 bPoint = vec2(0.0f, 0.0f);
     vec2 bNormal = vec2(0.0f, 0.0f);
+    vec2 bPoint = vec2(0.0f, 0.0f);
     int bPoints = 0;
 
     if (intersects(lba.a, lbb)) {
-        bPoint += lba.a;
+
+        if      (intersects(a.a, a.b, b.a, b.b)) {bNormal = normal(b.b, b.a);}
+        else if (intersects(a.a, a.b, b.a, b.c)) {bNormal = normal(b.a, b.c);}
+        else if (intersects(a.a, a.b, b.b, b.c)) {bNormal = normal(b.b, b.c);}
+
+        bPoint += a.a;
         bPoints++;
+
     }
 
     if (intersects(lba.b, lbb)) {
-        bPoint += lba.b;
+
+        if (bPoints == 0) {
+            if      (intersects(a.b, a.c, b.a, b.b)) {bNormal = normal(b.b, b.a);}
+            else if (intersects(a.b, a.c, b.a, b.c)) {bNormal = normal(b.a, b.c);}
+            else if (intersects(a.b, a.c, b.b, b.c)) {bNormal = normal(b.b, b.c);}
+        }
+
+        bPoint += a.b;
         bPoints++;
+
     }
 
     if (intersects(lba.c, lbb)) {
-        bPoint += lba.c;
+
+        if (bPoints == 0) {
+            if      (intersects(a.c, a.a, b.a, b.b)) {bNormal = normal(b.b, b.a);}
+            else if (intersects(a.c, a.a, b.a, b.c)) {bNormal = normal(b.a, b.c);}
+            else if (intersects(a.c, a.a, b.b, b.c)) {bNormal = normal(b.b, b.c);}
+        }
+
+        bPoint += a.c;
         bPoints++;
+
     }
 
     if (bPoints == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
@@ -294,7 +338,41 @@ CollisionResult getCollision(Triangle a, Triangle b) {
 
     // If the more points in b were found than a, swap the problem
     if (aPoints < bPoints) {
-        //TODO
+
+        vec2 tmpNormal = aNormal;
+        aNormal = bNormal;
+        bNormal = tmpNormal;
+
+        vec2 tmpPoint = aPoint;
+        aPoint = bPoint;
+        bPoint = tmpPoint;
+
+        float tmpPoints = aPoints;
+        aPoints = bPoints;
+        bPoints = tmpPoints;
+
+    }
+
+    if (aPoints == 1 && bPoints == 0) {
+        return {true, aNormal, aPoint, -1.0f};
+    }
+
+    if (aPoints == 1 && bPoints == 1) {
+        vec2 normal = glm::normalize(bPoint - aPoint);
+        vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
+        return {true, normal, point, -1.0f};
+    }
+
+    if (aPoints == 2 && bPoints == 0) {
+        vec2 point = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f);
+        return {true, aNormal, point, -1.0f};
+    }
+
+    if (aPoints == 2 && bPoints == 1) {
+        aPoint = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f);
+        vec2 normal = glm::normalize(bPoint - aPoint);
+        vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
+        return {true, normal, point, -1.0f};
     }
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
