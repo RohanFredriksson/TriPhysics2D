@@ -13,41 +13,6 @@ void rotateVector(vec2& vec, float degrees, vec2 origin) {
 
 }
 
-Line::Line(vec2 start, vec2 end) {
-    this->start = start;
-    this->end = end;
-}
-
-void Line::rotate(float degrees, vec2 origin) {
-    rotateVector(this->start, degrees, origin);
-    rotateVector(this->end, degrees, origin);
-}
-
-void Line::translate(vec2 by) {
-    this->start += by;
-    this->end += by;
-}
-
-vec2 Line::getMin() {
-    return vec2(std::min(this->start.x, this->end.x), std::min(this->start.y, this->end.y));
-}
-
-vec2 Line::getMax() {
-    return vec2(std::max(this->start.x, this->end.x), std::max(this->start.y, this->end.y));
-}
-
-float Line::getGradient() {
-    return (this->end.y - this->start.y) / (this->end.x - this->start.x);
-}
-
-float Line::getIntercept() {
-    return this->start.y - this->getGradient() * this->start.x;
-}
-
-bool Line::isVertical() {
-    return this->start.x == this->end.x;
-}
-
 Triangle::Triangle(vec2 a, vec2 b, vec2 c) {
     this->a = a;
     this->b = b;
@@ -64,6 +29,10 @@ void Triangle::translate(vec2 by) {
     this->a += by;
     this->b += by;
     this->c += by;
+}
+
+vec2 Triangle::getCentroid() {
+    return vec2((this->a.x + this->b.x + this->c.x) / 3.0f, (this->a.y + this->b.y + this->c.y) / 3.0f);
 }
 
 Circle::Circle(float radius, vec2 centre) {

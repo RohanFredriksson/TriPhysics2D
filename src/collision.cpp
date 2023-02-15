@@ -79,11 +79,9 @@ namespace {
 
     }
 
-    bool belowLine(vec2 point, vec2 start, vec2 end) {
+    bool below(vec2 point, vec2 start, vec2 end) {
 
-        if (point.x < start.x) {return false;}
-        if (point.x > end.x) {return false;}
-        if (start.x == end.x) {return false;}
+        if (start.x == end.x) {return point.y < start.y;}
 
         float m = (end.y - start.y) / (end.x / start.x);
         float y = m * (point.x - start.x) + start.y;
@@ -92,15 +90,113 @@ namespace {
 
     }
 
-    bool aboveLine(vec2 point, vec2 start, vec2 end) {
+    bool above(vec2 point, vec2 start, vec2 end) {
 
-        if (point.x < start.x) {return false;}
-        if (point.x > end.x) {return false;}
+        if (start.x == end.x) {return point.y > start.y;}
 
         float m = (end.y - start.y) / (end.x / start.x);
         float y = m * (point.x - start.x) + start.y;
 
         return point.y > y;
+
+    }
+
+    bool intersects(vec2 point, Triangle localised) {
+        return above(point, localised.a, localised.b) && below(point, localised.a, localised.c) && below(point, localised.c, localised.b);
+    }
+
+    bool intersects(vec2 aStart, vec2 aEnd, vec2 bStart, vec2 bEnd) {
+
+        // Special Case: Both lines are vertical.
+        if (aStart.x == aEnd.x && bStart.x == bEnd.x) {
+            
+            // If the x coordinates differ, they cannot intersect.
+            if (aStart.x != bStart.x) {return false;}
+
+            // If they're y ranges overlap, they intersect.
+            float aMin = std::min(aStart.y, aEnd.y);
+            float aMax = std::max(aStart.y, aEnd.y);
+            float bMin = std::min(bStart.y, bEnd.y);
+            float bMax = std::max(bStart.y, bEnd.y);
+
+            return aMin < bMax && aMax > bMin;
+
+        }
+
+        // If B is vertical, swap A and B.
+        if (bStart.x == bEnd.x) {
+            
+            vec2 tmp = aStart;
+            aStart = bStart;
+            bStart = tmp;
+
+            tmp = aEnd;
+            aEnd = bEnd;
+            bEnd = tmp;
+
+        }
+
+        // Special Case: One Line is Vertical.
+        if (aStart.x == bStart.x) {
+
+            // Check if the vertical line is in B's horizontal range.
+            float x = aStart.x;
+            float bMin = std::min(bStart.x, bEnd.x);
+            float bMax = std::max(bStart.x, bEnd.x);
+            bool intersects = x >= bMin && x <= bMax;
+            if (!intersects) {return false;}
+
+            // Find the y value of B at A's x coordinate.
+            float m = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
+            float b = bStart.y - m * bStart.x;
+            float y = m * x + b;
+
+            // If the y value is not in A's vertical range, they do not intersect.
+            float aMin = std::min(aStart.y, aEnd.y);
+            float aMax = std::max(aStart.y, aEnd.y);
+            intersects = y >= aMin && y <= aMax;
+            if (!intersects) {return false;}
+
+            return true;
+        }
+
+        // Standard Case: No vertical lines.
+        
+        // Line A -> ax + b
+        float a = (aEnd.y - aStart.y) / (aEnd.x - aStart.x);
+        float b = aStart.y - a * aStart.x;
+
+        // Line B -> cx + d
+        float c = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
+        float d = bStart.y - c * bStart.x;
+
+        // Intersection when ax + b = cx + d
+        float x = (d - b) / (a - c);
+        float y = a * x + b;
+
+        // Check if the intersection occurs in both bounding boxes.
+        vec2 min;
+        vec2 max;
+        bool intersects;
+
+        // Line A
+        min = vec2(std::min(aStart.x, aEnd.x), std::min(aStart.y, aEnd.y));
+        max = vec2(std::max(aStart.x, aEnd.x), std::max(aStart.y, aEnd.y));
+        intersects = x >= min.x && x <= max.x && y >= min.y && y <= max.y;
+        if (!intersects) {return false;}
+
+        // Line B
+        min = vec2(std::min(bStart.x, bEnd.x), std::min(bStart.y, bEnd.y));
+        max = vec2(std::max(bStart.x, bEnd.x), std::max(bStart.y, bEnd.y));
+        intersects = x >= min.x && x <= max.x && y >= min.y && y <= max.y;
+        if (!intersects) {return false;}
+
+        return true;
+    }
+
+    bool intersects(vec2 start, vec2 end, Triangle localised) {
+
+        return false;
 
     }
 
@@ -137,16 +233,69 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     colliding = aMin.x < bMax.x && aMax.x > bMin.x && aMin.y < bMax.y && aMax.y > bMin.y;
     if (!colliding) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
-    // Localise a and determine if b collides with a.
-    TriangleLocalisation localisation = localise(a);
-    vec2 translation = localisation.translation;
-    float rotation = localisation.rotation;
+    // Triangles in A's local space.
+    TriangleLocalisation aLocalisation = localise(a);
+    Triangle laa = aLocalisation.triangle;
+    Triangle lab = Triangle(b.a, b.b, b.c);
+    lab.rotate(aLocalisation.rotation, vec2(0.0f, 0.0f));
+    lab.translate(aLocalisation.translation);
 
-    Triangle la = localisation.triangle;
-    Triangle lb = Triangle(b.a, b.b, b.c);
+    // Triangles in B's local space.
+    TriangleLocalisation bLocalisation = localise(b);
+    Triangle lbb = bLocalisation.triangle;
+    Triangle lba = Triangle(a.a, a.b, a.c);
+    lba.rotate(bLocalisation.rotation, vec2(0.0f, 0.0f));
+    lba.translate(bLocalisation.translation);
 
-    lb.rotate(rotation, vec2(0.0f, 0.0f));
-    lb.translate(translation);
+    // Find points in triangle B that collide with triangle A.
+    vec2 aPoint = vec2(0.0f, 0.0f);
+    vec2 aNormal = vec2(0.0f, 0.0f);
+    int aPoints = 0;
+
+    if (intersects(lab.a, laa)) {
+        aPoint += lab.a;
+        aPoints++;
+    }
+
+    if (intersects(lab.b, laa)) {
+        aPoint += lab.b;
+        aPoints++;
+    }
+
+    if (intersects(lab.c, laa)) {
+        aPoint += lab.c;
+        aPoints++;
+    }
+
+    if (aPoints == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
+
+    // Find points in triangle A that collide with triangle B.
+    vec2 bPoint = vec2(0.0f, 0.0f);
+    vec2 bNormal = vec2(0.0f, 0.0f);
+    int bPoints = 0;
+
+    if (intersects(lba.a, lbb)) {
+        bPoint += lba.a;
+        bPoints++;
+    }
+
+    if (intersects(lba.b, lbb)) {
+        bPoint += lba.b;
+        bPoints++;
+    }
+
+    if (intersects(lba.c, lbb)) {
+        bPoint += lba.c;
+        bPoints++;
+    }
+
+    if (bPoints == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
+    if (aPoints == 0 && bPoints == 0) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
+
+    // If the more points in b were found than a, swap the problem
+    if (aPoints < bPoints) {
+        //TODO
+    }
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
 }
