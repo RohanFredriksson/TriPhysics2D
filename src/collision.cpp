@@ -232,15 +232,19 @@ namespace {
 
         std::vector<Line> result;
 
+        bool aFlag = false;
+        bool bFlag = false;
+        bool cFlag = false;
+
         Line edge = b.left(vertex);
-        if (intersects(edge.start, edge.end, a.b, a.a)) {result.push_back(Line(a.b, a.a));}
-        if (intersects(edge.start, edge.end, a.a, a.c)) {result.push_back(Line(a.a, a.c));}
-        if (intersects(edge.start, edge.end, a.c, a.b)) {result.push_back(Line(a.c, a.b));}
+        if (intersects(edge.start, edge.end, a.b, a.a)) {result.push_back(Line(a.b, a.a)); aFlag = true;}
+        if (intersects(edge.start, edge.end, a.a, a.c)) {result.push_back(Line(a.a, a.c)); bFlag = true;}
+        if (intersects(edge.start, edge.end, a.c, a.b)) {result.push_back(Line(a.c, a.b)); cFlag = true;}
 
         edge = b.right(vertex);
-        if (intersects(edge.start, edge.end, a.b, a.a)) {result.push_back(Line(a.b, a.a));}
-        if (intersects(edge.start, edge.end, a.a, a.c)) {result.push_back(Line(a.a, a.c));}
-        if (intersects(edge.start, edge.end, a.c, a.b)) {result.push_back(Line(a.c, a.b));}
+        if (intersects(edge.start, edge.end, a.b, a.a) && !aFlag) {result.push_back(Line(a.b, a.a));}
+        if (intersects(edge.start, edge.end, a.a, a.c) && !bFlag) {result.push_back(Line(a.a, a.c));}
+        if (intersects(edge.start, edge.end, a.c, a.b) && !cFlag) {result.push_back(Line(a.c, a.b));}
 
         return result;
 
@@ -391,17 +395,31 @@ CollisionResult getCollision(Triangle a, Triangle b) {
 
     if (aPoints.size() == 1 && bPoints.size() == 0) {
 
-        // TODO IF THERE ARE MORE THAN 1 EDGES USE THE SMALLEST ONE.
-
+        // Find the vertex and centroid.
         vec2 vertex = aPoints[0];
-        Line edge = getIntersectingEdge(vertex, b, a)[0];
         vec2 centroid = b.centroid();
+
+        std::vector<Line> edges = getIntersectingEdge(vertex, b, a);
+        if (edges.size() == 1) {
+
+            Line edge = edges[0];
+            vec2 normal = flip * getNormal(edge.start, edge.end);
+            float depth = getDistance(vertex, centroid, edge.start, edge.end) * 0.5f;
+            vec2 point = vertex + glm::normalize(centroid - vertex) * depth;
         
-        vec2 normal = flip * getNormal(edge.start, edge.end);
-        float depth = getDistance(vertex, centroid, edge.start, edge.end) * 0.5f;
-        vec2 point = vertex + glm::normalize(centroid - vertex) * depth;
-    
-        return {true, normal, point, depth};
+            return {true, normal, point, depth};
+        }
+
+        else {
+            // TODO: ADD COLLISION FOR THIS CASE.
+
+            // POSSIBLE SOLUTIONS:
+            // IF THE EDGE DISTANCE IS GREATER THAN MINIMUM CENTROID TO VERTEX DISTANCE OF THE OTHER TRIANGLE COLLIDE ON THAT EDGE
+            // IF THE EDGE OPPOSING THE VERTEX INTERSECTS BOTH EDGES IN THE OTHER TRIANGLE, COLLIDE WITH SOMETHING
+
+            return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
+        }
+
     }
 
     if (aPoints.size() == 1 && bPoints.size() == 1) {
@@ -411,9 +429,6 @@ CollisionResult getCollision(Triangle a, Triangle b) {
         float distance = 0.0f;
         Line bestEdge = Line(vec2(0.0f, 0.0f), vec2(0.0f, 0.0f));
         Triangle bestTriangle = b;
-        
-        // The point of collision is the average of both vertices that collided.
-        vec2 vertex = (aPoints[0] + bPoints[0]) * 0.5f;
         
         // Find the closest edge in A to the point of collision.
         std::vector<Line> aEdges = getIntersectingEdge(aPoints[0], b, a);
@@ -451,6 +466,8 @@ CollisionResult getCollision(Triangle a, Triangle b) {
             flip = -1.0f;
         }
 
+        // The point of collision is the average of both vertices that collided.
+        vec2 vertex = (aPoints[0] + bPoints[0]) * 0.5f;
         vec2 normal = flip * getNormal(bestEdge.end, bestEdge.start);
         vec2 centroid = bestTriangle.centroid();
         float depth = getDistance(vertex, centroid, bestEdge.start, bestEdge.end) * 0.5f;
