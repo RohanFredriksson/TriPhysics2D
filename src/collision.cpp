@@ -42,19 +42,41 @@ namespace {
         return glm::normalize(result);
     }
 
-    float getDistance(vec2 point, vec2 start, vec2 end) {
+    /*
+    Gets distance from aStart to the intersection of the lines A and B.
+    This function assumes that we are working with infinitely long lines, and NOT line segments.
+    To determine whether two line segments intersect, use: 
 
-        // Translate the space to the origin
-        point -= start;
-        end -= start;
+        intersects(vec2 aStart, vec2 aEnd, vec2 bStart, vec2 bEnd);
+    */
+    float getDistance(vec2 aStart, vec2 aEnd, vec2 bStart, vec2 bEnd) {
 
-        // Rotate the space such that start is on the x axis.
-        float angle = ((atan(end.y / end.x)) * 180) / M_PI;
-        rotateVector(point, -angle, vec2(0.0f, 0.0f));
-        rotateVector(end, -angle, vec2(0.0f, 0.0f));
+        // If either line is vertical, rotate the problem 45 degrees.
+        // Since we are solving for distance, direction does not need to be preserved.
+        if (aStart.x == aEnd.x || bStart.x == bEnd.x) {
+            rotateVector(aStart, 45.0f, vec2(0.0f, 0.0f));
+            rotateVector(aEnd, 45.0f, vec2(0.0f, 0.0f));
+            rotateVector(bStart, 45.0f, vec2(0.0f, 0.0f));
+            rotateVector(bEnd, 45.0f, vec2(0.0f, 0.0f));
+        }
 
-        // The perpendicular distance is the absolute value of point.y after rotation.
-        return fabsf(point.y);
+        // y = ax + b
+        float a = (aEnd.y - aStart.y) / (aEnd.x - aStart.x);
+        float b = aStart.y - a * aStart.x;
+        
+        // y = cx + d
+        float c = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
+        float d = bStart.y - c * bStart.x;
+
+        // ax + b = cx + d: solve for x
+        float x = (d - b) / (a - c);
+
+        // plug x into ax + b
+        float y = a * x + b;
+
+        // Now that we have the point, compute the distance between points.
+        vec2 point = vec2(x, y);
+        return glm::distance(aStart, point);
 
     }
 
@@ -347,7 +369,7 @@ CollisionResult getCollision(Triangle a, Triangle b) {
         vec2 centroid = b.centroid();
         
         vec2 normal = flip * getNormal(edge.start, edge.end);
-        float depth = getDistance(vertex, edge.start, edge.end) * 0.5f; // This is not exactly right, but good enough for now.
+        float depth = getDistance(vertex, centroid, edge.start, edge.end) * 0.5f;
         vec2 point = vertex + glm::normalize(centroid - vertex) * depth;
     
         return {true, normal, point, depth};
@@ -367,7 +389,7 @@ CollisionResult getCollision(Triangle a, Triangle b) {
         vec2 centroid = b.centroid();
 
         vec2 normal = flip * getNormal(aPoints[0], aPoints[1]);
-        float depth = getDistance(vertex, edge.start, edge.end) * 0.5f; // This is not exactly right, but good enough for now.
+        float depth = getDistance(vertex, centroid, edge.start, edge.end) * 0.5f;
         vec2 point = vertex + glm::normalize(centroid - vertex) * depth;
 
         return {true, normal, point, depth};
