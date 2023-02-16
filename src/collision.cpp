@@ -170,27 +170,15 @@ namespace {
     }
 
     bool intersects(vec2 aStart, vec2 aEnd, vec2 bStart, vec2 bEnd) {
-
-        aEnd -= aStart;
-        bStart -= aStart;
-        bEnd -= aStart;
-
-        float angle = -(atan(aEnd.y / aEnd.x) * 180) / M_PI;
-        rotateVector(aEnd, angle, vec2(0.0f, 0.0f));
-
-        if (aEnd.x < 0) {
-            rotateVector(aEnd, 180.0f, vec2(0.0f, 0.0f));
-            angle += 180.0f;
-        }
-
-        rotateVector(bStart, angle, vec2(0.0f, 0.0f));
-        rotateVector(bEnd, angle, vec2(0.0f, 0.0f));
-
-        float m = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
-        float b = bStart.y - m * bStart.x;
-        float x = -b / m;
-
-        return x >= 0.0f && x <= aEnd.x;
+        float dx0 = aEnd.x - aStart.x;
+        float dx1 = bEnd.x - bStart.x;
+        float dy0 = aEnd.y - aStart.y;
+        float dy1 = bEnd.y - bStart.y;
+        float p0 = dy1 * (bEnd.x - aStart.x) - dx1 *(bEnd.y - aStart.y);
+        float p1 = dy1 * (bEnd.x - aEnd.x)   - dx1 *(bEnd.y - aEnd.y);
+        float p2 = dy0 * (aEnd.x - bStart.x) - dx0 *(aEnd.y - bStart.y);
+        float p3 = dy0 * (aEnd.x - bEnd.x)   - dx0 *(aEnd.y - bEnd.y);
+        return (p0 * p1 <= 0) && (p2 * p3 <= 0);
     }
 
     Line getIntersectingEdge(vec2 vertex, Triangle b, Triangle a) {
@@ -357,35 +345,42 @@ CollisionResult getCollision(Triangle a, Triangle b) {
         vec2 vertex = aPoints[0];
         Line edge = getIntersectingEdge(vertex, b, a);
         vec2 centroid = b.centroid();
-        IntersectionResult i = getIntersection(vertex, centroid, edge.start, edge.end);
         
         vec2 normal = flip * getNormal(edge.start, edge.end);
-        float depth = getDistance(vertex, edge.start, edge.end) * 0.5f;
+        float depth = getDistance(vertex, edge.start, edge.end) * 0.5f; // This is not exactly right, but good enough for now.
         vec2 point = vertex + glm::normalize(centroid - vertex) * depth;
     
         return {true, normal, point, depth};
     }
-
-    return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
 
     /*
     if (aPoints.size() == 1 && bPoints.size() == 1) {
         
         return {true, normal, point, depth};
     }
+    */
 
     if (aPoints.size() == 2 && bPoints.size() == 0) {
         
+        vec2 vertex = 0.5f * (aPoints[0] + aPoints[1]);
+        Line edge = getIntersectingEdge(aPoints[0], b, a);
+        vec2 centroid = b.centroid();
+
+        vec2 normal = flip * getNormal(aPoints[0], aPoints[1]);
+        float depth = getDistance(vertex, edge.start, edge.end) * 0.5f; // This is not exactly right, but good enough for now.
+        vec2 point = vertex + glm::normalize(centroid - vertex) * depth;
+
         return {true, normal, point, depth};
     }
 
+    /*
     if (aPoints.size() == 2 && bPoints.size() == 1) {
         
         return {true, normal, point, depth};
     }
+    */
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
-    */
 }
 
 CollisionResult getCollision(Circle c, Triangle t) {
