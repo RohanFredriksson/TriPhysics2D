@@ -1,5 +1,6 @@
 #include <cmath>
 #include <limits>
+#include <vector>
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/geometric.hpp>
@@ -8,6 +9,54 @@
 #include <iostream>
 
 namespace {
+
+    bool below(vec2 point, vec2 start, vec2 end) {
+
+        if (start.x == end.x) {return point.y < start.y;}
+
+        float m = (end.y - start.y) / (end.x - start.x);
+        float y = m * (point.x - start.x) + start.y;
+
+        return point.y < y;
+
+    }
+
+    bool above(vec2 point, vec2 start, vec2 end) {
+
+        if (start.x == end.x) {return point.y > start.y;}
+
+        float m = (end.y - start.y) / (end.x - start.x);
+        float y = m * (point.x - start.x) + start.y;
+
+        return point.y > y;
+
+    }
+
+    bool intersects(vec2 point, Triangle localised) {
+        return above(point, localised.a, localised.b) && below(point, localised.a, localised.c) && below(point, localised.c, localised.b);
+    }
+
+    vec2 getNormal(vec2 start, vec2 end) {
+        vec2 result = end - start;
+        rotateVector(result, 90.0f, vec2(0.0f, 0.0f));
+        return glm::normalize(result);
+    }
+
+    float getDistance(vec2 point, vec2 start, vec2 end) {
+
+        // Translate the space to the origin
+        point -= start;
+        end -= start;
+
+        // Rotate the space such that start is on the x axis.
+        float angle = ((atan(end.y / end.x)) * 180) / M_PI;
+        rotateVector(point, -angle, vec2(0.0f, 0.0f));
+        rotateVector(end, -angle, vec2(0.0f, 0.0f));
+
+        // The perpendicular distance is the absolute value of point.y after rotation.
+        return fabsf(point.y);
+
+    }
 
     struct TriangleLocalisation {
         Triangle triangle;
@@ -82,140 +131,81 @@ namespace {
 
     }
 
-    bool below(vec2 point, vec2 start, vec2 end) {
+    struct IntersectionResult {
+        bool intersects;
+        vec2 point;
+    };
 
-        if (start.x == end.x) {return point.y < start.y;}
+    IntersectionResult getIntersection(vec2 aStart, vec2 aEnd, vec2 bStart, vec2 bEnd) {
 
-        float m = (end.y - start.y) / (end.x - start.x);
-        float y = m * (point.x - start.x) + start.y;
+        aEnd -= aStart;
+        bStart -= aStart;
+        bEnd -= aStart;
 
-        return point.y < y;
+        float angle = -(atan(aEnd.y / aEnd.x) * 180) / M_PI;
+        rotateVector(aEnd, angle, vec2(0.0f, 0.0f));
 
-    }
+        if (aEnd.x < 0) {
+            rotateVector(aEnd, 180.0f, vec2(0.0f, 0.0f));
+            angle += 180.0f;
+        }
 
-    bool above(vec2 point, vec2 start, vec2 end) {
+        rotateVector(bStart, angle, vec2(0.0f, 0.0f));
+        rotateVector(bEnd, angle, vec2(0.0f, 0.0f));
 
-        if (start.x == end.x) {return point.y > start.y;}
+        float m = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
+        float b = bStart.y - m * bStart.x;
+        float x = -b / m;
 
-        float m = (end.y - start.y) / (end.x - start.x);
-        float y = m * (point.x - start.x) + start.y;
+        if (x >= 0.0f && x <= aEnd.x) {
 
-        return point.y > y;
+            vec2 point = vec2(x, 0.0f);
+            rotateVector(point, -angle, vec2(0.0f, 0.0f));
+            point += aStart;
 
-    }
+            return {true, point};
+        }
 
-    bool intersects(vec2 point, Triangle localised) {
-        return above(point, localised.a, localised.b) && below(point, localised.a, localised.c) && below(point, localised.c, localised.b);
+        return {false, vec2(0.0f, 0.0f)};
     }
 
     bool intersects(vec2 aStart, vec2 aEnd, vec2 bStart, vec2 bEnd) {
 
-        // Special Case: Both lines are vertical.
-        if (aStart.x == aEnd.x && bStart.x == bEnd.x) {
-            
-            // If the x coordinates differ, they cannot intersect.
-            if (aStart.x != bStart.x) {return false;}
+        aEnd -= aStart;
+        bStart -= aStart;
+        bEnd -= aStart;
 
-            // If they're y ranges overlap, they intersect.
-            float aMin = std::min(aStart.y, aEnd.y);
-            float aMax = std::max(aStart.y, aEnd.y);
-            float bMin = std::min(bStart.y, bEnd.y);
-            float bMax = std::max(bStart.y, bEnd.y);
+        float angle = -(atan(aEnd.y / aEnd.x) * 180) / M_PI;
+        rotateVector(aEnd, angle, vec2(0.0f, 0.0f));
 
-            return aMin < bMax && aMax > bMin;
-
+        if (aEnd.x < 0) {
+            rotateVector(aEnd, 180.0f, vec2(0.0f, 0.0f));
+            angle += 180.0f;
         }
 
-        // If B is vertical, swap A and B.
-        if (bStart.x == bEnd.x) {
-            
-            vec2 tmp = aStart;
-            aStart = bStart;
-            bStart = tmp;
+        rotateVector(bStart, angle, vec2(0.0f, 0.0f));
+        rotateVector(bEnd, angle, vec2(0.0f, 0.0f));
 
-            tmp = aEnd;
-            aEnd = bEnd;
-            bEnd = tmp;
+        float m = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
+        float b = bStart.y - m * bStart.x;
+        float x = -b / m;
 
-        }
-
-        // Special Case: One Line is Vertical.
-        if (aStart.x == bStart.x) {
-
-            // Check if the vertical line is in B's horizontal range.
-            float x = aStart.x;
-            float bMin = std::min(bStart.x, bEnd.x);
-            float bMax = std::max(bStart.x, bEnd.x);
-            bool intersects = x >= bMin && x <= bMax;
-            if (!intersects) {return false;}
-
-            // Find the y value of B at A's x coordinate.
-            float m = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
-            float b = bStart.y - m * bStart.x;
-            float y = m * x + b;
-
-            // If the y value is not in A's vertical range, they do not intersect.
-            float aMin = std::min(aStart.y, aEnd.y);
-            float aMax = std::max(aStart.y, aEnd.y);
-            intersects = y >= aMin && y <= aMax;
-            if (!intersects) {return false;}
-
-            return true;
-        }
-
-        // Standard Case: No vertical lines.
-        
-        // Line A -> ax + b
-        float a = (aEnd.y - aStart.y) / (aEnd.x - aStart.x);
-        float b = aStart.y - a * aStart.x;
-
-        // Line B -> cx + d
-        float c = (bEnd.y - bStart.y) / (bEnd.x - bStart.x);
-        float d = bStart.y - c * bStart.x;
-
-        // Intersection when ax + b = cx + d
-        float x = (d - b) / (a - c);
-        float y = a * x + b;
-
-        // Check if the intersection occurs in both bounding boxes.
-        vec2 min;
-        vec2 max;
-        bool intersects;
-
-        // Line A
-        min = vec2(std::min(aStart.x, aEnd.x), std::min(aStart.y, aEnd.y));
-        max = vec2(std::max(aStart.x, aEnd.x), std::max(aStart.y, aEnd.y));
-        intersects = x >= min.x && x <= max.x && y >= min.y && y <= max.y;
-        if (!intersects) {return false;}
-
-        // Line B
-        min = vec2(std::min(bStart.x, bEnd.x), std::min(bStart.y, bEnd.y));
-        max = vec2(std::max(bStart.x, bEnd.x), std::max(bStart.y, bEnd.y));
-        intersects = x >= min.x && x <= max.x && y >= min.y && y <= max.y;
-        if (!intersects) {return false;}
-
-        return true;
+        return x >= 0.0f && x <= aEnd.x;
     }
 
-    vec2 normal(vec2 start, vec2 end) {
-        vec2 result = end - start;
-        rotateVector(result, 90.0f, vec2(0.0f, 0.0f));
-        return glm::normalize(result);
-    }
+    Line getIntersectingEdge(vec2 vertex, Triangle b, Triangle a) {
 
-    float distance(vec2 point, vec2 start, vec2 end) {
+        Line edge = b.left(vertex);
+        if (intersects(edge.start, edge.end, a.b, a.a)) {return Line(a.b, a.a);}
+        if (intersects(edge.start, edge.end, a.a, a.c)) {return Line(a.a, a.c);}
+        if (intersects(edge.start, edge.end, a.c, a.b)) {return Line(a.c, a.b);}
 
-        // Translate the space to the origin
-        point -= start;
-        end -= start;
+        edge = b.right(vertex);
+        if (intersects(edge.start, edge.end, a.b, a.a)) {return Line(a.b, a.a);}
+        if (intersects(edge.start, edge.end, a.a, a.c)) {return Line(a.a, a.c);}
+        if (intersects(edge.start, edge.end, a.c, a.b)) {return Line(a.c, a.b);}
 
-        // Rotate the space such that start is on the x axis.
-        float angle = ((atan(end.y / end.x)) * 180) / M_PI;
-        rotateVector(point, -angle, vec2(0.0f, 0.0f));
-        rotateVector(end, -angle, vec2(0.0f, 0.0f));
-
-        // The perpendicular distance is the absolute value of point.y after rotation.
-        return fabsf(point.y);
+        return Line(vec2(0.0f, 0.0f), vec2(0.0f, 0.0f));
 
     }
 
@@ -327,154 +317,75 @@ CollisionResult getCollision(Triangle a, Triangle b) {
     lba.translate(bLocalisation.translation);
 
     // Find points in triangle B that collide with triangle A.
-    vec2 aNormal = vec2(0.0f, 0.0f);
-    vec2 aPoint = vec2(0.0f, 0.0f);
-    int aPoints = 0;
-    float aDepth = std::numeric_limits<float>::max();
-    float i = 0.0f;
+    std::vector<vec2> aPoints;
+    if (intersects(lab.a, laa)) {aPoints.push_back(b.a);}
+    if (intersects(lab.b, laa)) {aPoints.push_back(b.b);}
+    if (intersects(lab.c, laa)) {aPoints.push_back(b.c);}
 
-    if (intersects(lab.a, laa)) {
-
-        if (intersects(b.a, b.b, a.a, a.b) || intersects(b.a, b.c, a.a, a.b)) {i = distance(b.a, a.a, a.b) * 0.5f; if (i < aDepth) {aNormal = normal(a.a, a.b); aDepth = i;}}
-        if (intersects(b.a, b.b, a.a, a.c) || intersects(b.a, b.c, a.a, a.c)) {i = distance(b.a, a.a, a.c) * 0.5f; if (i < aDepth) {aNormal = normal(a.c, a.a); aDepth = i;}}
-        if (intersects(b.a, b.b, a.b, a.c) || intersects(b.a, b.c, a.b, a.c)) {i = distance(b.a, a.b, a.c) * 0.5f; if (i < aDepth) {aNormal = normal(a.b, a.c); aDepth = i;}}
-
-        aPoint += b.a;
-        aPoints++;
-
-    }
-
-    if (intersects(lab.b, laa)) {
-
-        if (intersects(b.b, b.c, a.a, a.b) || intersects(b.b, b.a, a.a, a.b)) {i = distance(b.b, a.a, a.b) * 0.5f; if (i < aDepth) {aNormal = normal(a.a, a.b); aDepth = i;}}
-        if (intersects(b.b, b.c, a.a, a.c) || intersects(b.b, b.a, a.a, a.c)) {i = distance(b.b, a.a, a.c) * 0.5f; if (i < aDepth) {aNormal = normal(a.c, a.a); aDepth = i;}}
-        if (intersects(b.b, b.c, a.b, a.c) || intersects(b.b, b.a, a.b, a.c)) {i = distance(b.b, a.b, a.c) * 0.5f; if (i < aDepth) {aNormal = normal(a.b, a.c); aDepth = i;}}
-        
-        aPoint += b.b;
-        aPoints++;
-
-    }
-
-    if (intersects(lab.c, laa)) {
-
-        if (intersects(b.c, b.a, a.a, a.b) || intersects(b.c, b.a, a.a, a.b)) {i = distance(b.c, a.a, a.b) * 0.5f; if (i < aDepth) {aNormal = normal(a.a, a.b); aDepth = i;}}
-        if (intersects(b.c, b.a, a.a, a.c) || intersects(b.c, b.a, a.a, a.c)) {i = distance(b.c, a.a, a.c) * 0.5f; if (i < aDepth) {aNormal = normal(a.c, a.a); aDepth = i;}}
-        if (intersects(b.c, b.a, a.b, a.c) || intersects(b.c, b.a, a.b, a.c)) {i = distance(b.c, a.b, a.c) * 0.5f; if (i < aDepth) {aNormal = normal(a.b, a.c); aDepth = i;}}
-
-        aPoint += b.c;
-        aPoints++;
-
-    }
-
-    if (aPoints == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
+    if (aPoints.size() == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
     // Find points in triangle A that collide with triangle B.
-    vec2 bNormal = vec2(0.0f, 0.0f);
-    vec2 bPoint = vec2(0.0f, 0.0f);
-    int bPoints = 0;
-    float bDepth = std::numeric_limits<float>::max();
-    float j = 0.0f;
+    std::vector<vec2> bPoints;
+    if (intersects(lba.a, lbb)) {bPoints.push_back(a.a);}
+    if (intersects(lba.b, lbb)) {bPoints.push_back(a.b);}
+    if (intersects(lba.c, lbb)) {bPoints.push_back(a.c);}
 
-    if (intersects(lba.a, lbb)) {
-
-        if (intersects(a.a, a.b, b.a, b.b) || intersects(a.a, a.b, b.a, b.b)) {j = distance(a.a, b.a, b.b) * 0.5f; if (j < bDepth) {bNormal = normal(b.b, b.a); bDepth = j;}}
-        if (intersects(a.a, a.b, b.a, b.c) || intersects(a.a, a.b, b.a, b.c)) {j = distance(a.a, b.a, b.c) * 0.5f; if (j < bDepth) {bNormal = normal(b.a, b.c); bDepth = j;}}
-        if (intersects(a.a, a.b, b.b, b.c) || intersects(a.a, a.b, b.b, b.c)) {j = distance(a.a, b.b, b.c) * 0.5f; if (j < bDepth) {bNormal = normal(b.c, b.b); bDepth = j;}}
-
-        bPoint += a.a;
-        bPoints++;
-
-    }
-
-    if (intersects(lba.b, lbb)) {
-
-        if (intersects(a.b, a.c, b.a, b.b) || intersects(a.b, a.a, b.a, b.b)) {j = distance(a.b, b.a, b.b) * 0.5f; if (j < bDepth) {bNormal = normal(b.b, b.a); bDepth = j;}}
-        if (intersects(a.b, a.c, b.a, b.c) || intersects(a.b, a.a, b.a, b.c)) {j = distance(a.b, b.a, b.c) * 0.5f; if (j < bDepth) {bNormal = normal(b.a, b.c); bDepth = j;}}
-        if (intersects(a.b, a.c, b.b, b.c) || intersects(a.b, a.a, b.b, b.c)) {j = distance(a.b, b.b, b.c) * 0.5f; if (j < bDepth) {bNormal = normal(b.c, b.b); bDepth = j;}}
-
-        bPoint += a.b;
-        bPoints++;
-
-    }
-
-    if (intersects(lba.c, lbb)) {
-        
-        if (intersects(a.c, a.a, b.a, b.b) || intersects(a.c, a.b, b.a, b.b)) {j = distance(a.c, b.a, b.b) * 0.5f; if (j < bDepth) {bNormal = normal(b.b, b.a); bDepth = j;}}
-        if (intersects(a.c, a.a, b.a, b.c) || intersects(a.c, a.b, b.a, b.c)) {j = distance(a.c, b.a, b.c) * 0.5f; if (j < bDepth) {bNormal = normal(b.a, b.c); bDepth = j;}}
-        if (intersects(a.c, a.a, b.b, b.c) || intersects(a.c, a.b, b.b, b.c)) {j = distance(a.c, b.b, b.c) * 0.5f; if (j < bDepth) {bNormal = normal(b.c, b.b); bDepth = j;}}
-
-        bPoint += a.c;
-        bPoints++;
-
-    }
-
-    if (bPoints == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
-    if (aPoints == 0 && bPoints == 0) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
+    if (bPoints.size() == 3) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
+    if (aPoints.size() == 0 && bPoints.size() == 0) {return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};}
 
     // If the more points in b were found than a, swap the problem
-    if (aPoints < bPoints) {
+    float flip = -1.0f;
+    if (aPoints.size() < bPoints.size()) {
 
-        Triangle tmpTriangle = a;
+        // Swap the triangles
+        Triangle t = a;
         a = b;
-        b = tmpTriangle;
+        b = t;
 
-        vec2 tmpNormal = aNormal;
-        aNormal = bNormal;
-        bNormal = tmpNormal;
-
-        vec2 tmpPoint = aPoint;
-        aPoint = bPoint;
-        bPoint = tmpPoint;
-
-        int tmpPoints = aPoints;
+        // Swap the vectors
+        std::vector<vec2> points;
         aPoints = bPoints;
-        bPoints = tmpPoints;
+        bPoints = points;
 
-        float tmpDepth = aDepth;
-        aDepth = bDepth;
-        bDepth = tmpDepth;
+        // Flip the float
+        flip = 1.0f;
 
     }
 
-    if (aPoints == 1 && bPoints == 0) {
-        vec2 pointToCentroid = b.getCentroid() - aPoint;
-        pointToCentroid = glm::normalize(pointToCentroid);
-        return {true, aNormal, aPoint + (aDepth * pointToCentroid), aDepth};
-    }
+    if (aPoints.size() == 1 && bPoints.size() == 0) {
 
-    if (aPoints == 1 && bPoints == 1) {
+        vec2 vertex = aPoints[0];
+        Line edge = getIntersectingEdge(vertex, b, a);
+        vec2 centroid = b.centroid();
+        IntersectionResult i = getIntersection(vertex, centroid, edge.start, edge.end);
         
-        vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
-        vec2 normal = glm::normalize(aPoint - bPoint);
-        float depth = glm::length(bPoint - aPoint) * 0.5f;
-
-        if (aDepth < depth) {
-            normal = aNormal;
-            depth = aDepth;
-        }
-
-        if (bDepth < depth) {
-            normal = bNormal;
-            depth = bDepth;
-        }
-
-        return {true, normal, point, depth};
-    }
-
-    if (aPoints == 2 && bPoints == 0) {
-        vec2 point = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f) - aDepth * aNormal;
-        return {true, aNormal, point, aDepth};
-    }
-
-    if (aPoints == 2 && bPoints == 1) {
-        aPoint = vec2(aPoint.x * 0.5f, aPoint.y * 0.5f);
-        vec2 normal = glm::normalize(aPoint - bPoint);
-        vec2 point = vec2((aPoint.x + bPoint.x) * 0.5f, (aPoint.y + bPoint.y) * 0.5f);
-        float depth = glm::length(bPoint - aPoint) * 0.5f;
+        vec2 normal = flip * getNormal(edge.start, edge.end);
+        float depth = getDistance(vertex, edge.start, edge.end) * 0.5f;
+        vec2 point = vertex + glm::normalize(centroid - vertex) * depth;
+    
         return {true, normal, point, depth};
     }
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
+
+    /*
+    if (aPoints.size() == 1 && bPoints.size() == 1) {
+        
+        return {true, normal, point, depth};
+    }
+
+    if (aPoints.size() == 2 && bPoints.size() == 0) {
+        
+        return {true, normal, point, depth};
+    }
+
+    if (aPoints.size() == 2 && bPoints.size() == 1) {
+        
+        return {true, normal, point, depth};
+    }
+
+    return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
+    */
 }
 
 CollisionResult getCollision(Circle c, Triangle t) {

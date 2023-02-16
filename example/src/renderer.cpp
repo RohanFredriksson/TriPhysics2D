@@ -14,7 +14,7 @@ namespace {
     const int VERTEX_ARRAY_LENGTH = MAX_LINES * 6 * 2;
     const int CIRCLE_POINTS = 20;
 
-    class Line {
+    class RenderLine {
 
         public:
 
@@ -23,7 +23,7 @@ namespace {
             vec3 colour;
             int lifetime;
 
-            Line(vec2 from, vec2 to, vec3 colour, int lifetime) {
+            RenderLine(vec2 from, vec2 to, vec3 colour, int lifetime) {
                 this->from = from;
                 this->to = to;
                 this->colour = colour;
@@ -32,7 +32,7 @@ namespace {
 
     };
 
-    vector<Line*> lines;
+    vector<RenderLine*> lines;
     float* vertices;
     Shader* shader;
     unsigned int vao;
@@ -89,7 +89,7 @@ namespace Renderer {
     void render() {
 
         for (int i = 0; i < lines.size(); i++) {
-            Line* current = lines[i];
+            RenderLine* current = lines[i];
             current->lifetime--;
             if (current->lifetime < 0) {
                 delete current;
@@ -104,7 +104,7 @@ namespace Renderer {
         int n = lines.size();
         for (int i = 0; i < n; i++) {
 
-            Line* current = lines[i];
+            RenderLine* current = lines[i];
             for (int j = 0; j < 2; j++) {
 
                 vec2 position;
@@ -175,7 +175,7 @@ namespace Renderer {
             return;
         }
 
-        Line* line = new Line(from, to, colour, lifetime);
+        RenderLine* line = new RenderLine(from, to, colour, lifetime);
         lines.push_back(line);
 
     }
