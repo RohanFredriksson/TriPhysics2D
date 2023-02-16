@@ -80,6 +80,31 @@ namespace {
 
     }
 
+    float getPerpendicularDistance(vec2 point, vec2 start, vec2 end) {
+
+        // If the line is vertical, rotate the problem 45 degrees.
+        // Since we are solving for distance, direction does not need to be preserved.
+        if (start.x == end.x) {
+            rotateVector(point, 45.0f, vec2(0.0f, 0.0f));
+            rotateVector(start, 45.0f, vec2(0.0f, 0.0f));
+            rotateVector(end, 45.0f, vec2(0.0f, 0.0f));
+        }
+
+        // Get the line in form y = mx + b
+        float gradient = (end.y - start.y) / (end.x - start.x);
+        float intercept = start.y - gradient * start.x;
+
+        // Get the line in general form ax + by + c = 0
+        float a = 1.0f;
+        float b = -gradient;
+        float c = -intercept;
+
+        // Use perpendicular distance formula.
+        float distance = fabsf(a * point.x + b * point.y + c) / sqrtf(a * a + b * b);
+        return distance;
+
+    }
+
     struct TriangleLocalisation {
         Triangle triangle;
         float rotation;
@@ -203,19 +228,21 @@ namespace {
         return (p0 * p1 <= 0) && (p2 * p3 <= 0);
     }
 
-    Line getIntersectingEdge(vec2 vertex, Triangle b, Triangle a) {
+    std::vector<Line> getIntersectingEdge(vec2 vertex, Triangle b, Triangle a) {
+
+        std::vector<Line> result;
 
         Line edge = b.left(vertex);
-        if (intersects(edge.start, edge.end, a.b, a.a)) {return Line(a.b, a.a);}
-        if (intersects(edge.start, edge.end, a.a, a.c)) {return Line(a.a, a.c);}
-        if (intersects(edge.start, edge.end, a.c, a.b)) {return Line(a.c, a.b);}
+        if (intersects(edge.start, edge.end, a.b, a.a)) {result.push_back(Line(a.b, a.a));}
+        if (intersects(edge.start, edge.end, a.a, a.c)) {result.push_back(Line(a.a, a.c));}
+        if (intersects(edge.start, edge.end, a.c, a.b)) {result.push_back(Line(a.c, a.b));}
 
         edge = b.right(vertex);
-        if (intersects(edge.start, edge.end, a.b, a.a)) {return Line(a.b, a.a);}
-        if (intersects(edge.start, edge.end, a.a, a.c)) {return Line(a.a, a.c);}
-        if (intersects(edge.start, edge.end, a.c, a.b)) {return Line(a.c, a.b);}
+        if (intersects(edge.start, edge.end, a.b, a.a)) {result.push_back(Line(a.b, a.a));}
+        if (intersects(edge.start, edge.end, a.a, a.c)) {result.push_back(Line(a.a, a.c));}
+        if (intersects(edge.start, edge.end, a.c, a.b)) {result.push_back(Line(a.c, a.b));}
 
-        return Line(vec2(0.0f, 0.0f), vec2(0.0f, 0.0f));
+        return result;
 
     }
 
@@ -364,8 +391,10 @@ CollisionResult getCollision(Triangle a, Triangle b) {
 
     if (aPoints.size() == 1 && bPoints.size() == 0) {
 
+        // TODO IF THERE ARE MORE THAN 1 EDGES USE THE SMALLEST ONE.
+
         vec2 vertex = aPoints[0];
-        Line edge = getIntersectingEdge(vertex, b, a);
+        Line edge = getIntersectingEdge(vertex, b, a)[0];
         vec2 centroid = b.centroid();
         
         vec2 normal = flip * getNormal(edge.start, edge.end);
@@ -375,17 +404,64 @@ CollisionResult getCollision(Triangle a, Triangle b) {
         return {true, normal, point, depth};
     }
 
-    /*
     if (aPoints.size() == 1 && bPoints.size() == 1) {
-        
-        return {true, normal, point, depth};
-    }
-    */
 
-    if (aPoints.size() == 2 && bPoints.size() == 0) {
+        // Find the closest edge in triangle A to the point of B that intersects A.
+        float bestDistance = std::numeric_limits<float>::max();
+        float distance = 0.0f;
+        Line bestEdge = Line(vec2(0.0f, 0.0f), vec2(0.0f, 0.0f));
+        Triangle bestTriangle = b;
         
+        // The point of collision is the average of both vertices that collided.
+        vec2 vertex = (aPoints[0] + bPoints[0]) * 0.5f;
+        
+        // Find the closest edge in A to the point of collision.
+        std::vector<Line> aEdges = getIntersectingEdge(aPoints[0], b, a);
+        distance = getDistance(aPoints[0], a.left(aPoints[0]).end, aEdges[0].start, aEdges[0].end);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestEdge = aEdges[0];
+            bestTriangle = b;
+            flip = 1.0f;
+        }
+
+        distance = getDistance(aPoints[0], a.right(aPoints[0]).end, aEdges[1].start, aEdges[1].end);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestEdge = aEdges[1];
+            bestTriangle = a;
+            flip = 1.0f;
+        }
+        
+        // See if any edge in B is closer.
+        std::vector<Line> bEdges = getIntersectingEdge(bPoints[0], a, b);
+        distance = getDistance(bPoints[0], b.left(bPoints[0]).end, bEdges[0].start, bEdges[0].end);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestEdge = bEdges[0];
+            bestTriangle = a;
+            flip = -1.0f;
+        }
+        
+        distance = getDistance(bPoints[0], b.right(bPoints[0]).end, bEdges[1].start, bEdges[1].end);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestEdge = bEdges[1];
+            bestTriangle = a;
+            flip = -1.0f;
+        }
+
+        vec2 normal = flip * getNormal(bestEdge.end, bestEdge.start);
+        vec2 centroid = bestTriangle.centroid();
+        float depth = getDistance(vertex, centroid, bestEdge.start, bestEdge.end) * 0.5f;
+
+        return {true, normal, vertex, depth};
+    }
+
+    if (aPoints.size() == 2) {
+
         vec2 vertex = 0.5f * (aPoints[0] + aPoints[1]);
-        Line edge = getIntersectingEdge(aPoints[0], b, a);
+        Line edge = getIntersectingEdge(aPoints[0], b, a)[0];
         vec2 centroid = b.centroid();
 
         vec2 normal = flip * getNormal(aPoints[0], aPoints[1]);
@@ -394,13 +470,6 @@ CollisionResult getCollision(Triangle a, Triangle b) {
 
         return {true, normal, point, depth};
     }
-
-    /*
-    if (aPoints.size() == 2 && bPoints.size() == 1) {
-        
-        return {true, normal, point, depth};
-    }
-    */
 
     return {false, vec2(0.0f, 0.0f), vec2(0.0f, 0.0f), 0.0f};
 }
